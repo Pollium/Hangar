@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Settings, FolderGit2 } from 'lucide-react';
+import { Settings, FolderGit2, LayoutGrid } from 'lucide-react';
 import { SessionSidebar } from '@/modules/sessions/components/SessionSidebar';
 import { NotificationBell } from '@/modules/notifications/components/NotificationBell';
 
@@ -12,6 +12,9 @@ export const AppShell = ({ children }: { children: ReactNode }) => (
                 <Link to='/' className='text-sm font-semibold text-foreground'>Cloud Code</Link>
                 <div className='flex items-center gap-3'>
                     <NotificationBell />
+                    <Link to='/dashboard' className='text-muted transition-colors hover:text-foreground' aria-label='Fleet'>
+                        <LayoutGrid className='size-4' />
+                    </Link>
                     <Link to='/projects' className='text-muted transition-colors hover:text-foreground' aria-label='Projects'>
                         <FolderGit2 className='size-4' />
                     </Link>
