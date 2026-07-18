@@ -10,7 +10,7 @@ import typia from '@typia/unplugin/vite';
  * validator. Controllers never write the typia call themselves.
  */
 const autoValidateBody = (): Plugin => ({
-    name: 'pollium:auto-validate-body',
+    name: 'cloud-code:auto-validate-body',
     enforce: 'pre',
     transform(code, id){
         if(!/src\/modules\/[^/?]+\/controllers\/[^/?]+\.ts(\?.*)?$/.test(id)) return null;
