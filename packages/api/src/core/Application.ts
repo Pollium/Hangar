@@ -35,7 +35,9 @@ export default class Application{
         });
 
         await this.#app.register(cors, {
-            origin: config.corsOrigin,
+            // CORS_ORIGIN may list several origins (comma-separated) so the web dev server can
+            // land on any of a few ports without breaking cross-origin requests.
+            origin: config.corsOrigin.split(',').map((o) => o.trim()).filter(Boolean),
             credentials: true
         });
         await this.#app.register(multipart, {
