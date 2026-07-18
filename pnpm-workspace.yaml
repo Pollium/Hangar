@@ -1,9 +1,13 @@
 packages:
-    - packages/*
+  - packages/*
+ignoredBuiltDependencies:
+  - cpu-features
+  - protobufjs
+  - ssh2
 
 linkWorkspacePackages: true
 
 onlyBuiltDependencies:
-    - better-sqlite3
-    - esbuild
-    - msgpackr-extract
+  - better-sqlite3
+  - esbuild
+  - msgpackr-extract
