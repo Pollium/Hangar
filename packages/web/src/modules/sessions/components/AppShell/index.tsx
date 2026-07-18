@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Settings, FolderGit2 } from 'lucide-react';
 import { SessionSidebar } from '@/modules/sessions/components/SessionSidebar';
+import { NotificationBell } from '@/modules/notifications/components/NotificationBell';
 
 /** Two-pane app frame: persistent session sidebar on the left, routed content on the right. */
 export const AppShell = ({ children }: { children: ReactNode }) => (
@@ -10,6 +11,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => (
             <div className='flex items-center justify-between px-4 pt-4'>
                 <Link to='/' className='text-sm font-semibold text-foreground'>Cloud Code</Link>
                 <div className='flex items-center gap-3'>
+                    <NotificationBell />
                     <Link to='/projects' className='text-muted transition-colors hover:text-foreground' aria-label='Projects'>
                         <FolderGit2 className='size-4' />
                     </Link>
