@@ -33,6 +33,15 @@ export default class DockerService{
         await this.#docker.createVolume({ Name: name });
     }
 
+    async imageExists(image: string): Promise<boolean>{
+        try{
+            await this.#docker.getImage(image).inspect();
+            return true;
+        }catch{
+            return false;
+        }
+    }
+
     async pull(image: string): Promise<void>{
         try{
             const stream = await this.#docker.pull(image);
