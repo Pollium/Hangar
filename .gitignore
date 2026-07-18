@@ -1,1 +1,10 @@
 .phases/
+node_modules
+dist
+*.sqlite
+*.sqlite-journal
+.env
+.env.local
+*.log
+.DS_Store
+caddy_data
