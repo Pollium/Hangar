@@ -1,0 +1,15 @@
+# Two sites: the SPA on the web domain, the API (HTTP + WebSocket) on the api subdomain.
+# Caddy provisions TLS automatically for real domains. For a local run set the domains to
+# :80 style addresses and point VITE_API_URL at the api host.
+
+{$WEB_DOMAIN} {
+	root * /srv
+	encode gzip
+	try_files {path} /index.html
+	file_server
+}
+
+{$API_DOMAIN} {
+	# reverse_proxy transparently upgrades WebSocket connections.
+	reverse_proxy api:4000
+}

@@ -1,11 +1,50 @@
-# Placeholder compose for local dev — full deploy stack lands in phase 24.
+# Full self-host stack: edge (web + TLS + API proxy), API control plane, Redis.
+# Configure domains and secrets in .env (see .env.example). One command: docker compose up -d.
 services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      args:
+        VITE_API_URL: ${PUBLIC_API_URL}
+    environment:
+      WEB_DOMAIN: ${WEB_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    env_file: .env
+    environment:
+      REDIS_HOST: redis
+      DATABASE_PATH: /data/cloud-code.sqlite
+    volumes:
+      # Control plane manages sandboxes through the host daemon. The socket is mounted ONLY
+      # here — never inside a sandbox container.
+      - /var/run/docker.sock:/var/run/docker.sock
+      - api_data:/data
+    depends_on:
+      - redis
+    restart: unless-stopped
+
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
+    restart: unless-stopped
 
 volumes:
+  caddy_data:
+  caddy_config:
+  api_data:
   redis_data:
