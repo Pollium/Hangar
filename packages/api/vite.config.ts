@@ -37,6 +37,11 @@ export default defineConfig({
             '@tests': fileURLToPath(new URL('./tests', import.meta.url))
         }
     },
+    // Disable the file watcher: this is a backend run via vite-node, and on hosts with a low
+    // fs.inotify limit the watcher hits ENOSPC. Nothing here needs HMR.
+    server: {
+        watch: null
+    },
     test: {
         include: ['src/**/*.test.ts'],
         setupFiles: ['./tests/setup.ts']

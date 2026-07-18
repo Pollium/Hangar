@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import 'dotenv/config';
 
 import Application from '@/core/Application';
