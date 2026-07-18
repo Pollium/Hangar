@@ -1,6 +1,6 @@
 export type Theme = 'light' | 'dark';
 
-const STORAGE_KEY = 'pollium.theme';
+const STORAGE_KEY = 'cloud-code.theme';
 
 const resolveInitial = (): Theme => {
     const fromQuery = new URLSearchParams(window.location.search).get('theme');
@@ -9,7 +9,8 @@ const resolveInitial = (): Theme => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if(stored === 'light' || stored === 'dark') return stored;
 
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    // Dark-first product.
+    return 'dark';
 };
 
 export const applyTheme = (theme: Theme) => {

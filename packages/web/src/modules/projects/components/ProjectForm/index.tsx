@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@heroui/react';
 import { projectApi, cliApi } from '@/modules/projects/api/api';
 import type { CliDescriptor } from '@cloud-code/contracts/modules/cli/domain';
 
-interface Props{
-    onCreated: () => void;
-}
+const input = 'rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent placeholder:text-muted';
 
-export const ProjectForm = ({ onCreated }: Props) => {
+export const ProjectForm = ({ onCreated }: { onCreated: () => void }) => {
     const [name, setName] = useState('');
     const [repoUrl, setRepoUrl] = useState('');
     const [defaultCli, setDefaultCli] = useState('claude-code');
@@ -22,12 +19,7 @@ export const ProjectForm = ({ onCreated }: Props) => {
         if(!name.trim()) return;
         setBusy(true);
         try{
-            await projectApi.create({
-                name: name.trim(),
-                description: '',
-                repoUrl: repoUrl.trim() || undefined,
-                defaultCli
-            });
+            await projectApi.create({ name: name.trim(), description: '', repoUrl: repoUrl.trim() || undefined, defaultCli });
             setName('');
             setRepoUrl('');
             onCreated();
@@ -37,28 +29,23 @@ export const ProjectForm = ({ onCreated }: Props) => {
     };
 
     return (
-        <div className='flex flex-col gap-3 rounded-xl border border-foreground/10 p-4'>
-            <p className='text-sm font-medium text-foreground'>New project</p>
-            <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder='Project name'
-                className='rounded-lg bg-foreground/5 px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted'
-            />
-            <input
-                value={repoUrl}
-                onChange={(e) => setRepoUrl(e.target.value)}
-                placeholder='Git repo URL (optional)'
-                className='rounded-lg bg-foreground/5 px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted'
-            />
-            <select
-                value={defaultCli}
-                onChange={(e) => setDefaultCli(e.target.value)}
-                className='rounded-lg bg-foreground/5 px-3 py-2 text-sm text-foreground outline-none'
+        <div className='flex flex-col gap-3'>
+            <span className='mono-label text-muted/70'>New project</span>
+            <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
+                <input className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder='Project name' />
+                <select className={input} value={defaultCli} onChange={(e) => setDefaultCli(e.target.value)}>
+                    {clis.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                </select>
+            </div>
+            <input className={input} value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} placeholder='Git repo URL (optional)' />
+            <button
+                type='button'
+                onClick={submit}
+                disabled={busy}
+                className='self-start rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover disabled:opacity-60'
             >
-                {clis.map((cli) => <option key={cli.id} value={cli.id}>{cli.label}</option>)}
-            </select>
-            <Button onPress={submit} isPending={busy} className='bg-foreground text-background'>Create project</Button>
+                {busy ? 'Creating…' : 'Create project'}
+            </button>
         </div>
     );
 };

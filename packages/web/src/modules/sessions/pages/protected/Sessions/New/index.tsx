@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@heroui/react';
 import { AppShell } from '@/modules/sessions/components/AppShell';
+import { Canvas, Row } from '@/shared/components/ui/Blueprint';
+import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { sessionApi } from '@/modules/sessions/api/api';
 import { projectApi, cliApi } from '@/modules/projects/api/api';
 import type { Project } from '@cloud-code/contracts/modules/project/domain';
 import type { CliDescriptor } from '@cloud-code/contracts/modules/cli/domain';
+
+const input = 'rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent placeholder:text-muted';
 
 const NewSession = () => {
     const navigate = useNavigate();
@@ -36,53 +39,48 @@ const NewSession = () => {
     };
 
     return (
-        <AppShell>
-            <div className='mx-auto flex w-full max-w-md flex-col gap-4 p-8'>
-                <h1 className='text-lg font-semibold text-foreground'>New session</h1>
-
-                {projects.length === 0 ? (
-                    <div className='flex flex-col gap-3 rounded-xl border border-foreground/10 p-4'>
-                        <p className='text-sm text-muted'>You need a project first.</p>
-                        <Button onPress={() => navigate('/projects')} className='bg-foreground text-background'>Create a project</Button>
-                    </div>
-                ) : (
-                    <>
-                        <label className='flex flex-col gap-1 text-sm'>
-                            <span className='text-muted'>Project</span>
-                            <select
-                                value={projectId ?? ''}
-                                onChange={(e) => setProjectId(Number(e.target.value))}
-                                className='rounded-lg bg-foreground/5 px-3 py-2 text-foreground outline-none'
+        <AppShell title='New session'>
+            <Canvas>
+                <Row className='px-8 pt-12 pb-10'>
+                    <PageHeader title='New session' description='Pick a project and a CLI. The agent starts in a persistent tmux session inside the sandbox.' />
+                </Row>
+                <Row grow className='p-8'>
+                    {projects.length === 0 ? (
+                        <div className='flex flex-col items-start gap-3 rounded-xl border border-hairline p-6'>
+                            <p className='text-sm text-muted'>You need a project first.</p>
+                            <button onClick={() => navigate('/projects')} className='rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover'>
+                                Create a project
+                            </button>
+                        </div>
+                    ) : (
+                        <div className='flex max-w-md flex-col gap-4'>
+                            <label className='flex flex-col gap-1.5'>
+                                <span className='mono-label text-muted/70'>Project</span>
+                                <select className={input} value={projectId ?? ''} onChange={(e) => setProjectId(Number(e.target.value))}>
+                                    {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                </select>
+                            </label>
+                            <label className='flex flex-col gap-1.5'>
+                                <span className='mono-label text-muted/70'>CLI</span>
+                                <select className={input} value={cliType} onChange={(e) => setCliType(e.target.value)}>
+                                    {clis.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                                </select>
+                            </label>
+                            <label className='flex flex-col gap-1.5'>
+                                <span className='mono-label text-muted/70'>Title</span>
+                                <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} placeholder='What are you working on?' />
+                            </label>
+                            <button
+                                onClick={create}
+                                disabled={busy}
+                                className='self-start rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover disabled:opacity-60'
                             >
-                                {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                            </select>
-                        </label>
-
-                        <label className='flex flex-col gap-1 text-sm'>
-                            <span className='text-muted'>CLI</span>
-                            <select
-                                value={cliType}
-                                onChange={(e) => setCliType(e.target.value)}
-                                className='rounded-lg bg-foreground/5 px-3 py-2 text-foreground outline-none'
-                            >
-                                {clis.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-                            </select>
-                        </label>
-
-                        <label className='flex flex-col gap-1 text-sm'>
-                            <span className='text-muted'>Title (optional)</span>
-                            <input
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder='What are you working on?'
-                                className='rounded-lg bg-foreground/5 px-3 py-2 text-foreground outline-none placeholder:text-muted'
-                            />
-                        </label>
-
-                        <Button onPress={create} isPending={busy} className='bg-foreground text-background'>Start session</Button>
-                    </>
-                )}
-            </div>
+                                {busy ? 'Starting…' : 'Start session'}
+                            </button>
+                        </div>
+                    )}
+                </Row>
+            </Canvas>
         </AppShell>
     );
 };

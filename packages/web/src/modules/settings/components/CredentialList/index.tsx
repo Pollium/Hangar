@@ -1,4 +1,3 @@
-import { Button } from '@heroui/react';
 import { credentialApi } from '@/modules/settings/api/api';
 import type { CredentialView } from '@cloud-code/contracts/modules/credential/domain';
 
@@ -18,14 +17,20 @@ export const CredentialList = ({ credentials, onChanged }: Props) => {
     }
 
     return (
-        <ul className='flex flex-col gap-2'>
+        <ul className='overflow-hidden rounded-xl border border-hairline'>
             {credentials.map((credential) => (
-                <li key={credential.id} className='flex items-center justify-between rounded-xl border border-foreground/10 px-4 py-3'>
-                    <div className='flex min-w-0 flex-col'>
+                <li key={credential.id} className='flex items-center justify-between gap-4 border-b border-hairline px-5 py-4 last:border-b-0'>
+                    <div className='flex min-w-0 flex-col gap-0.5'>
                         <span className='truncate text-sm font-medium text-foreground'>{credential.label}</span>
-                        <span className='truncate text-xs text-muted'>{credential.provider} · {credential.envVar}</span>
+                        <span className='truncate font-mono text-[11px] text-muted/70'>{credential.envVar}</span>
                     </div>
-                    <Button size='sm' variant='secondary' onPress={() => remove(credential.id)}>Delete</Button>
+                    <button
+                        type='button'
+                        onClick={() => remove(credential.id)}
+                        className='shrink-0 rounded-md border border-hairline px-2.5 py-1 text-xs text-danger transition-colors hover:bg-danger/10'
+                    >
+                        Delete
+                    </button>
                 </li>
             ))}
         </ul>

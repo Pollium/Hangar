@@ -7,7 +7,7 @@ const SessionPage = () => {
     const sessionId = Number(id);
 
     return (
-        <AppShell>
+        <AppShell title={`Session #${sessionId}`} bleed>
             {Number.isInteger(sessionId)
                 ? <TerminalView key={sessionId} sessionId={sessionId} />
                 : <div className='flex h-full items-center justify-center text-sm text-muted'>Invalid session.</div>}
