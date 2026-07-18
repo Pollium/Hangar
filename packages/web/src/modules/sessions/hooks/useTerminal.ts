@@ -31,7 +31,31 @@ export const useTerminal = (sessionId: number) => {
             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
             fontSize: 13,
             cursorBlink: true,
-            theme: { background: '#0a0a0a', foreground: '#e4e4e7' }
+            // Full 16-colour ANSI palette so agent CLIs (diffs, prompts, spinners) stay readable
+            // on the dark background — the xterm defaults wash out on near-black.
+            theme: {
+                background: '#0d0d10',
+                foreground: '#e6e6e9',
+                cursor: '#e6e6e9',
+                cursorAccent: '#0d0d10',
+                selectionBackground: '#3a3a45',
+                black: '#1a1a1f',
+                red: '#ff6b6b',
+                green: '#5bd97f',
+                yellow: '#f0c674',
+                blue: '#7aa2f7',
+                magenta: '#bb9af7',
+                cyan: '#56cfd6',
+                white: '#d5d5da',
+                brightBlack: '#6b6b76',
+                brightRed: '#ff8787',
+                brightGreen: '#8fe0a3',
+                brightYellow: '#ffd88a',
+                brightBlue: '#a3c0ff',
+                brightMagenta: '#d0b8ff',
+                brightCyan: '#8ae5ea',
+                brightWhite: '#ffffff'
+            }
         });
         const fit = new FitAddon();
         term.loadAddon(fit);

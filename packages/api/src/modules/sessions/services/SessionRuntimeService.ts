@@ -24,7 +24,9 @@ export default class SessionRuntimeService{
         const name = this.#tmux.name(session.id);
 
         if(!(await this.#tmux.hasSession(handle, name))){
-            const env = await this.#credentials.resolveEnvFor(session.ownerId, adapter.requiredCredentials);
+            // Inject every credential the owner has, not just the adapter's required keys, so
+            // custom entries like ANTHROPIC_BASE_URL / OPENAI_BASE_URL reach the CLI too.
+            const env = await this.#credentials.resolveEnvFor(session.ownerId);
             await this.#install(handle, adapter.installCommand());
             await this.#tmux.ensureSession(handle, name, adapter.startCommand({ cwd: session.cwd }), env, session.cwd);
         }

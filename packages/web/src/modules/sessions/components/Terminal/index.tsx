@@ -9,7 +9,7 @@ export const TerminalView = ({ sessionId }: { sessionId: number }) => {
                 <span>Session #{sessionId}{agentStatus ? ` · ${agentStatus.replace('_', ' ')}` : ''}</span>
                 {connection !== 'open' && <span className='text-amber-500'>reconnecting…</span>}
             </div>
-            <div className='min-h-0 flex-1 bg-[#0a0a0a] p-2'>
+            <div className='min-h-0 flex-1 bg-[#0d0d10] p-2'>
                 <div ref={containerRef} className='h-full w-full' />
             </div>
         </div>
