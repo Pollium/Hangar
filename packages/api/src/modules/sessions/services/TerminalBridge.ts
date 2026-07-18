@@ -1,5 +1,6 @@
 import { logger } from '@/core/utils/Logger';
 import SessionRuntimeService from './SessionRuntimeService';
+import SessionStatusService from './SessionStatusService';
 import SessionEvent from '../models/SessionEvent';
 import type Session from '../models/Session';
 import type { PtyStream } from '@/shared/services/docker/contracts';
@@ -25,6 +26,7 @@ const FLUSH_BYTES = 8192;
  */
 export default class TerminalBridge{
     #runtime = new SessionRuntimeService();
+    #status = new SessionStatusService();
     readonly #attachments = new Map<number, Attachment>();
 
     constructor(runtime: SessionRuntimeService = new SessionRuntimeService()){
@@ -44,6 +46,8 @@ export default class TerminalBridge{
 
             pty.on('data', (chunk: Buffer) => this.#onData(session, attachment as Attachment, chunk.toString('utf8')));
             pty.on('close', () => this.#onClose(session));
+            // Status frames are broadcast through the same listener set as output.
+            this.#status.track(session, (frame) => attachment!.listeners.forEach((fn) => fn(frame)));
         }
         attachment.listeners.add(listener);
     }
@@ -71,12 +75,14 @@ export default class TerminalBridge{
         }catch{
             // stream already closed
         }
+        this.#releaseStatus(sessionId);
         this.#attachments.delete(sessionId);
     }
 
     #onData(session: Session, attachment: Attachment, chunk: string): void{
         const frame: TerminalFrame = { type: 'terminal.output', data: { chunk } };
         attachment.listeners.forEach((listener) => listener(frame));
+        this.#status.feed(session.id, chunk);
         this.#queuePersist(session, attachment, chunk);
     }
 
@@ -110,5 +116,9 @@ export default class TerminalBridge{
         }catch(error){
             logger.error('session transcript persist failed', error, { scope: 'session.transcript', sessionId: session.id });
         }
+    }
+
+    #releaseStatus(sessionId: number): void{
+        this.#status.untrack(sessionId);
     }
 }
