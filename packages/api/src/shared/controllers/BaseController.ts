@@ -1,0 +1,73 @@
+import { FastifyInstance, FastifyReply, FastifyRequest, RouteGenericInterface } from 'fastify';
+import { getRoutes } from './Route';
+import { getStatus } from './Status';
+import { getParamResolvers } from './params';
+import RedirectResponse from './RedirectResponse';
+import Paginated from './Paginated';
+import { getMiddleware } from '@/shared/middlewares/Middleware';
+import { RouteError } from '@/shared/errors/RouteError';
+
+type Handler = (req: FastifyRequest<RouteGenericInterface>, reply: FastifyReply) => unknown;
+
+/**
+ * A contracts endpoint declares its full wire path; the mount prefix still comes from the
+ * module's folder name (discovery). Assert they agree — a drifted table fails the boot, not
+ * a request — then register the path relative to the prefix.
+ */
+const relativeTo = (path: string, prefix: string): string => {
+    if(path !== prefix && !path.startsWith(`${prefix}/`)){
+        throw RouteError.PrefixMismatch(path);
+    }
+    return path.slice(prefix.length) || '/';
+};
+
+export default abstract class BaseController{
+    async register(app: FastifyInstance, prefix: string): Promise<void> {
+        await app.register(async (scope) => {
+            for(const route of getRoutes(this.constructor)){
+                const handler = this.#wrap(route.handlerName);
+                const middlewares = getMiddleware(this.constructor, route.handlerName);
+                scope.route({
+                    method: route.method,
+                    url: route.absolute ? relativeTo(route.path, prefix) : route.path,
+                    preHandler: middlewares.map((mw) => async (req, reply) => { await mw(req, reply); }),
+                    handler
+                });
+            }
+        }, { prefix });
+    }
+
+    #wrap(handlerName: string | symbol): Handler{
+        const methods = this as unknown as Record<string | symbol, (...args: unknown[]) => unknown>;
+        const method = methods[handlerName].bind(this);
+        const override = getStatus(this.constructor, handlerName);
+        const resolvers = getParamResolvers(this.constructor, handlerName);
+
+        return async (req, reply) => {
+            // The async wrapper turns a sync-throwing resolver into a rejection
+            // Promise.all observes; without it, an in-flight async resolver
+            // (e.g. @Owned's DB read) would be left unhandled and crash the
+            // process if it later rejects.
+            const args = await Promise.all(resolvers.map(async (resolve) => resolve(req, reply)));
+            const result = await method(...args);
+
+            if(result instanceof RedirectResponse){
+                reply.redirect(result.url, result.status);
+                return reply;
+            }
+
+            if(result instanceof Paginated){
+                reply.status(override ?? 200).send({ data: result.items, meta: result.meta });
+                return reply;
+            }
+
+            if(result === undefined || result === null){
+                reply.status(override ?? 204).send();
+                return reply;
+            }
+
+            reply.status(override ?? 200).send({ data: result });
+            return reply;
+        };
+    }
+}
