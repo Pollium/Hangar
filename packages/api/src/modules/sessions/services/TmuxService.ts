@@ -35,6 +35,11 @@ export default class TmuxService{
         await handle.exec(['tmux', 'kill-session', '-t', name]);
     }
 
+    /** Types a line into the session's pane and submits it (used for scheduled prompts). */
+    async sendKeys(handle: ContainerHandle, name: string, text: string): Promise<void>{
+        await handle.exec(['tmux', 'send-keys', '-t', name, text, 'Enter']);
+    }
+
     /** Opens a PTY attached to the tmux session — the stream the terminal gateway bridges. */
     attach(handle: ContainerHandle, name: string): Promise<PtyStream>{
         return handle.openPty(['tmux', 'attach-session', '-t', name]);
