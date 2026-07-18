@@ -8,10 +8,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 build-e
 RUN corepack enable
 WORKDIR /app
 
+# All workspace manifests are needed for a frozen install to satisfy the lockfile.
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/contracts/package.json packages/contracts/package.json
 COPY packages/api/package.json packages/api/package.json
-RUN pnpm install --frozen-lockfile
+COPY packages/web/package.json packages/web/package.json
+RUN pnpm install --filter @cloud-code/api --frozen-lockfile
 
 COPY packages/contracts packages/contracts
 COPY packages/api packages/api
