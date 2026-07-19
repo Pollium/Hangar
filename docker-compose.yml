@@ -31,9 +31,8 @@ services:
       REDIS_HOST: redis
       DATABASE_PATH: /data/cloud-code.sqlite
     volumes:
-      # Control plane manages sandboxes through the host daemon. The socket is mounted ONLY
-      # here — never inside a sandbox container.
-      - /var/run/docker.sock:/var/run/docker.sock
+      # The control plane holds NO Docker socket. All sandboxes/codespaces run on users' agents
+      # (their VPS), reached only over the outbound agent tunnel.
       - api_data:/data
     depends_on:
       - redis

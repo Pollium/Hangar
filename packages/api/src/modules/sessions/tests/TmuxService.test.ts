@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import TmuxService from '../services/TmuxService';
-import type ContainerHandle from '@/shared/services/docker/ContainerHandle';
+import type { IContainerHandle } from '@/shared/services/docker/contracts';
 
 const handleWith = (execImpl: (cmd: string[]) => { output: string; exitCode: number }) => {
     const exec = vi.fn(async (cmd: string[]) => execImpl(cmd));
-    return { handle: { exec } as unknown as ContainerHandle, exec };
+    return { handle: { exec } as unknown as IContainerHandle, exec };
 };
 
 describe('TmuxService', () => {
@@ -76,7 +76,7 @@ describe('TmuxService', () => {
             }
             return { output: '', exitCode: 0 };
         });
-        const handle = { id: 'container-concurrent', exec } as unknown as ContainerHandle;
+        const handle = { id: 'container-concurrent', exec } as unknown as IContainerHandle;
 
         await Promise.all([
             tmux.ensureSession(handle, 'cc-9', ['bash'], [], '/workspace'),

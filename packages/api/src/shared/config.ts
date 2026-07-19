@@ -38,6 +38,12 @@ export const config = {
     corsOrigin,
     // Base URL of the web app, used to build links (e.g. notification deep-links).
     webUrl: optional('WEB_URL') ?? corsOrigin,
+    // Public base URL of this control-plane API — the address an agent on a user's VPS dials
+    // back into. Falls back to WEB_URL for single-host local runs.
+    publicApiUrl: optional('PUBLIC_API_URL') ?? optional('WEB_URL') ?? corsOrigin,
+    // Published agent image referenced by the "Connect a VPS" install command. Kept in env (not
+    // code) so the registry/name can change — e.g. after renaming the project — without a rebuild.
+    agentImage: optional('AGENT_IMAGE') ?? 'ghcr.io/pollium/cloud-code-agent:latest',
     // Open registration. Set false on a personal VPS to run single-admin (see auth module).
     allowSignup: optional('ALLOW_SIGNUP') !== 'false',
 

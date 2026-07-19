@@ -1,9 +1,9 @@
 import { config } from '@/shared/config';
 import { logger } from '@/core/utils/Logger';
 import { eventBus } from '@/shared/events/EventBus';
-import DockerService from '@/shared/services/docker/DockerService';
-import type ContainerHandle from '@/shared/services/docker/ContainerHandle';
+import { agentRegistry } from '@/modules/agents/transport/AgentRegistry';
 import ProjectService from '@/modules/projects/services/ProjectService';
+import type { IDockerService, IContainerHandle } from '@/shared/services/docker/contracts';
 import type Project from '@/modules/projects/models/Project';
 import Sandbox from '../models/Sandbox';
 import SandboxProvisioner from './SandboxProvisioner';
@@ -13,18 +13,18 @@ import type { SandboxUsage } from '@cloud-code/contracts/modules/sandbox/domain'
 // All service instances in this API process share the same project provisioning flight.
 const provisionFlights = new Map<string, Promise<Sandbox>>();
 
-// The API only needs to join the sandbox network once per process — subsequent joins are
-// no-ops, so we skip the extra daemon round-trip on every attach after the first.
-let networkJoined = false;
-
+/**
+ * Manages a project's sandbox — but never on the control-plane host. Every Docker operation runs
+ * on the project owner's connected agent (their VPS); with no agent online the owner's sandboxes
+ * simply cannot run (Agent::NoAgentConnected), by design.
+ */
 export default class SandboxService{
     #projects = new ProjectService();
-    #docker: DockerService;
-    #provisioner: SandboxProvisioner;
+    #provisioner = new SandboxProvisioner();
 
-    constructor(docker: DockerService = new DockerService()){
-        this.#docker = docker;
-        this.#provisioner = new SandboxProvisioner(docker);
+    /** Docker bound to the given owner's live agent, or throws when none is connected. */
+    #dockerFor(ownerId: number): IDockerService{
+        return agentRegistry.dockerFor(ownerId);
     }
 
     async status(userId: number, projectId: number): Promise<Sandbox>{
@@ -53,12 +53,9 @@ export default class SandboxService{
         const project = await this.#projects.get(userId, projectId);
         const sandbox = await Sandbox.findOneBy({ projectId });
         if(!sandbox) throw SandboxError.NotFound();
-        // Container gone (host cleanup / manual removal) → clear the stale identity before a
-        // fresh provision. This prevents a new namespaced container from mounting a global
-        // legacy volume that can no longer be tied to this exact container.
         if(!sandbox.containerId) return this.provision(userId, projectId);
 
-        const handle = this.#docker.get(sandbox.containerId);
+        const handle = this.#dockerFor(sandbox.ownerId).get(sandbox.containerId);
         if(!(await handle.isRunning())){
             try{
                 await handle.start();
@@ -79,7 +76,7 @@ export default class SandboxService{
 
     async stop(userId: number, projectId: number): Promise<Sandbox>{
         const sandbox = await this.status(userId, projectId);
-        if(sandbox.containerId) await this.#docker.get(sandbox.containerId).stop();
+        if(sandbox.containerId) await this.#dockerFor(sandbox.ownerId).get(sandbox.containerId).stop();
         sandbox.status = 'stopped';
         await sandbox.save();
         this.#emit('sandbox.stopped', sandbox);
@@ -90,9 +87,9 @@ export default class SandboxService{
         const sandbox = await this.status(userId, projectId);
         if(sandbox.containerId){
             try{
-                await this.#docker.get(sandbox.containerId).remove(false);
+                await this.#dockerFor(sandbox.ownerId).get(sandbox.containerId).remove(false);
             }catch{
-                // container already gone
+                // container already gone or agent offline — the row is removed regardless
             }
         }
         await sandbox.remove();
@@ -103,25 +100,21 @@ export default class SandboxService{
         if(sandbox.status !== 'running' || !sandbox.containerId){
             return { cpuPercent: 0, memUsedMb: 0, memLimitMb: sandbox.limits.memoryMb };
         }
-        return this.#docker.get(sandbox.containerId).stats();
+        return this.#dockerFor(sandbox.ownerId).get(sandbox.containerId).stats();
     }
 
-    /** Provisions or starts as needed and returns the live container. Used by session runtime. */
-    async ensureRunning(userId: number, projectId: number): Promise<{ sandbox: Sandbox; handle: ContainerHandle }>{
-        if(!networkJoined){
-            await this.#docker.connectSelf(config.docker.network);
-            networkJoined = true;
-        }
+    /** Provisions or starts as needed and returns the live container on the owner's agent. */
+    async ensureRunning(userId: number, projectId: number): Promise<{ sandbox: Sandbox; handle: IContainerHandle }>{
         let sandbox = await Sandbox.findOneBy({ projectId });
         if(!sandbox || !sandbox.containerId){
             sandbox = await this.provision(userId, projectId);
         }else{
-            const current = this.#docker.get(sandbox.containerId);
+            const current = this.#dockerFor(sandbox.ownerId).get(sandbox.containerId);
             if(sandbox.status !== 'running' || !(await current.isRunning())){
                 sandbox = await this.start(userId, projectId);
             }
         }
-        return { sandbox, handle: this.#docker.get(sandbox.containerId as string) };
+        return { sandbox, handle: this.#dockerFor(sandbox.ownerId).get(sandbox.containerId as string) };
     }
 
     async #provisionProject(project: Project): Promise<Sandbox>{
@@ -130,7 +123,8 @@ export default class SandboxService{
         await sandbox.save();
 
         try{
-            const handle = await this.#provisioner.provision(project, sandbox);
+            const docker = this.#dockerFor(project.ownerId);
+            const handle = await this.#provisioner.provision(project, sandbox, docker);
             sandbox.containerId = handle.id;
             sandbox.status = 'running';
             sandbox.lastStartedAt = new Date();
@@ -148,15 +142,7 @@ export default class SandboxService{
         const expectedVolume = this.#provisioner.volumeName(projectId);
         const existing = await Sandbox.findOneBy({ projectId });
         if(existing){
-            // An unattached legacy volume has no trustworthy deployment identity. Quarantine
-            // it (do not delete/copy/mount it) and use a fresh labelled namespaced volume.
             if(!existing.containerId && existing.volumeName !== expectedVolume){
-                logger.warn('quarantining unverified legacy sandbox volume', {
-                    scope: 'sandbox.migrate',
-                    projectId,
-                    legacyVolume: existing.volumeName,
-                    replacementVolume: expectedVolume
-                });
                 existing.volumeName = expectedVolume;
                 await existing.save();
             }

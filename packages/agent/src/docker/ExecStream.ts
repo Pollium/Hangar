@@ -4,7 +4,6 @@ import type { PtyStream, ExecOptions } from './contracts';
 const INSPECT_TIMEOUT_MS = 75;
 const EXIT_INSPECT_ATTEMPTS = 4;
 
-/** Resolve Docker exec inspection without letting a daemon call hang the PTY close path. */
 const inspectWithin = async (exec: Docker.Exec): Promise<Docker.ExecInspectInfo | undefined> =>
     Promise.race([
         exec.inspect(),
@@ -12,9 +11,9 @@ const inspectWithin = async (exec: Docker.Exec): Promise<Docker.ExecInspectInfo 
     ]);
 
 /**
- * Opens a PTY-backed exec inside a container and hijacks the duplex stream. With Tty:true
- * there is no stdout/stderr multiplexing — the stream is raw terminal bytes, exactly what
- * xterm.js expects on the browser side. Writing to the stream feeds the process stdin.
+ * Opens a PTY-backed exec inside a container and hijacks the duplex. With Tty:true the stream is
+ * raw terminal bytes (no stdout/stderr multiplexing) — exactly what the control plane relays to
+ * xterm. Writing feeds stdin.
  */
 export const openPty = async (
     container: Docker.Container,
@@ -74,8 +73,6 @@ export const openPty = async (
     stream.once('close', inspectExit);
     stream.once('error', inspectExit);
 
-    // A very short exec can close while exec.start() is resolving, before listeners exist.
-    // Stream state catches the real socket case; one bounded inspect covers mocked/adaptor races.
     if(stream.destroyed || stream.closed || stream.readableEnded || stream.writableEnded){
         inspectExit();
     }else{

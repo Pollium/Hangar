@@ -23,7 +23,7 @@ export default class ContainerHandle{
         try{
             await this.#container.stop({ t: 5 });
         }catch{
-            // already stopped or gone — treat as idempotent
+            // already stopped or gone — idempotent
         }
     }
 
@@ -42,7 +42,6 @@ export default class ContainerHandle{
         }
     }
 
-    /** Returns the named volume mounted at `destination`, if any. */
     async volumeAt(destination: string): Promise<string | undefined>{
         try{
             const info = await this.#container.inspect();
@@ -55,7 +54,20 @@ export default class ContainerHandle{
         }
     }
 
-    /** Runs a one-shot command and collects its combined output. */
+    /** First IP the container holds on any attached network — used to open the codespace relay. */
+    async ipAddress(): Promise<string | undefined>{
+        try{
+            const info = await this.#container.inspect();
+            const networks = info.NetworkSettings?.Networks ?? {};
+            for(const net of Object.values(networks)){
+                if(net?.IPAddress) return net.IPAddress;
+            }
+            return undefined;
+        }catch{
+            return undefined;
+        }
+    }
+
     async exec(cmd: string[], opts: ExecOptions = {}): Promise<ExecResult>{
         const exec = await this.#container.exec({
             Cmd: cmd,

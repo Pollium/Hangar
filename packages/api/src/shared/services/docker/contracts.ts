@@ -44,3 +44,32 @@ export type PtyStream = Duplex & {
     resize: (cols: number, rows: number) => void;
     exitCode: Promise<number | null>;
 };
+
+/**
+ * The container operations the sandbox/session layer needs. Implemented by a remote handle that
+ * forwards to the project owner's agent — the control plane holds no Docker socket of its own.
+ */
+export interface IContainerHandle{
+    readonly id: string;
+    start(): Promise<void>;
+    stop(): Promise<void>;
+    remove(withVolumes?: boolean): Promise<void>;
+    isRunning(): Promise<boolean>;
+    volumeAt(destination: string): Promise<string | undefined>;
+    exec(cmd: string[], opts?: ExecOptions): Promise<ExecResult>;
+    openPty(cmd: string[], opts?: ExecOptions): Promise<PtyStream>;
+    stats(): Promise<ContainerStats>;
+}
+
+/** Docker daemon operations, forwarded to an agent. `get` returns a handle bound to the same agent. */
+export interface IDockerService{
+    get(containerId: string): IContainerHandle;
+    ensureNetwork(name: string): Promise<void>;
+    ensureVolume(name: string, labels?: Record<string, string>): Promise<void>;
+    imageExists(image: string): Promise<boolean>;
+    pull(image: string): Promise<void>;
+    create(spec: CreateContainerSpec): Promise<IContainerHandle>;
+    list(labels: Record<string, string>): Promise<IContainerHandle[]>;
+    /** Opens a raw TCP relay to a port inside a container (codespace HTTP/WS proxy). */
+    connect(containerId: string, port: number): Promise<PtyStream>;
+}

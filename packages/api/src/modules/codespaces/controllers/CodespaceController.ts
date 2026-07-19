@@ -13,8 +13,7 @@ export default class CodespaceController extends BaseController{
     #service = new CodespaceService();
 
     @Route(codespaceRoutes.token)
-    async token(@CurrentUser() userId: number, @NumericParam('projectId') projectId: number): Promise<CodespaceTicket>{
-        await this.#service.ensureRunning(userId, projectId);
-        return { token: this.#service.issueToken(userId, projectId), path: `/codespace/${projectId}/` };
+    token(@CurrentUser() userId: number, @NumericParam('projectId') projectId: number): Promise<CodespaceTicket>{
+        return this.#service.prepare(userId, projectId);
     }
 }

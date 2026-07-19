@@ -5,7 +5,7 @@ import { userSeed } from '@/modules/user/tests/UserSeed';
 import { projectSeed } from '@/modules/projects/tests/ProjectSeed';
 import type SandboxService from '@/modules/sandboxes/services/SandboxService';
 import type CredentialService from '@/modules/credentials/services/CredentialService';
-import type ContainerHandle from '@/shared/services/docker/ContainerHandle';
+import type { IContainerHandle } from '@/shared/services/docker/contracts';
 import type { PtyStream } from '@/shared/services/docker/contracts';
 import Session from '../models/Session';
 import SessionRuntimeService from '../services/SessionRuntimeService';
@@ -31,7 +31,7 @@ const runtimeWith = (hasSession = true) => {
     const pty = new PassThrough() as unknown as PtyStream;
     pty.resize = vi.fn();
     pty.exitCode = new Promise<number | null>(() => undefined);
-    const handle = { id: 'container-1' } as ContainerHandle;
+    const handle = { id: 'container-1' } as IContainerHandle;
     const sandboxes = {
         ensureRunning: vi.fn().mockResolvedValue({ handle, sandbox: {} })
     } as unknown as SandboxService;

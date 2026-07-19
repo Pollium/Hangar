@@ -1,23 +1,16 @@
 import { config } from '@/shared/config';
 import { logger } from '@/core/utils/Logger';
-import DockerService from '@/shared/services/docker/DockerService';
 import ProjectRepository from '@/modules/projects/models/ProjectRepository';
-import type ContainerHandle from '@/shared/services/docker/ContainerHandle';
+import type { IDockerService, IContainerHandle } from '@/shared/services/docker/contracts';
 import type Project from '@/modules/projects/models/Project';
 import type Sandbox from '../models/Sandbox';
 
 /**
- * Turns a Sandbox row into a live, hardened container: ensures the network/volume/image
- * exist, creates and starts the container, and clones the project repo on first boot.
- * The container runs a keeper process so it stays up with no active session (24/7).
+ * Turns a Sandbox row into a live, hardened container ON THE PROJECT OWNER'S AGENT: ensures the
+ * network/volume/image exist, creates and starts the container, and clones the project repo on
+ * first boot. The container runs a keeper process so it stays up with no active session (24/7).
  */
 export default class SandboxProvisioner{
-    readonly #docker: DockerService;
-
-    constructor(docker: DockerService){
-        this.#docker = docker;
-    }
-
     containerName(projectId: number): string{
         return `cc-${config.docker.namespace}-project-${projectId}`;
     }
@@ -26,23 +19,23 @@ export default class SandboxProvisioner{
         return `cc-${config.docker.namespace}-project-${projectId}`;
     }
 
-    async provision(project: Project, sandbox: Sandbox): Promise<ContainerHandle>{
+    async provision(project: Project, sandbox: Sandbox, docker: IDockerService): Promise<IContainerHandle>{
         const labels = {
             'cloud-code.instanceId': config.docker.namespace,
             'cloud-code.projectId': String(project.id),
             'cloud-code.owner': String(project.ownerId)
         };
 
-        await this.#docker.ensureNetwork(config.docker.network);
-        await this.#docker.ensureVolume(sandbox.volumeName, labels);
+        await docker.ensureNetwork(config.docker.network);
+        await docker.ensureVolume(sandbox.volumeName, labels);
 
-        if(!(await this.#docker.imageExists(project.baseImage))){
-            await this.#docker.pull(project.baseImage);
+        if(!(await docker.imageExists(project.baseImage))){
+            await docker.pull(project.baseImage);
         }
 
         // A crash after Docker create but before the DB save can leave an orphan. Re-adopt it
         // only when the complete identity and workspace mount both match.
-        const [owned] = await this.#docker.list(labels);
+        const [owned] = await docker.list(labels);
         if(owned){
             const mountedVolume = await owned.volumeAt('/workspace');
             if(mountedVolume === sandbox.volumeName){
@@ -61,9 +54,9 @@ export default class SandboxProvisioner{
             await owned.remove(false);
         }
 
-        let created: ContainerHandle | null = null;
+        let created: IContainerHandle | null = null;
         try{
-            created = await this.#docker.create({
+            created = await docker.create({
                 image: project.baseImage,
                 name: this.containerName(project.id),
                 env: [],
@@ -103,7 +96,7 @@ export default class SandboxProvisioner{
      * be interpreted as shell syntax. Session environment variables are not available at
      * provisioning time and are never persisted into the volume.
      */
-    async #cloneRepositories(handle: ContainerHandle, project: Project): Promise<void>{
+    async #cloneRepositories(handle: IContainerHandle, project: Project): Promise<void>{
         const repos = await ProjectRepository.findBy({ projectId: project.id });
         for(const repo of repos){
             const dest = `/workspace/${this.#repoSlug(repo.url)}`;

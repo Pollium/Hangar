@@ -3,7 +3,7 @@ import BaseQueue from '@/shared/queues/BaseQueue';
 import { logger } from '@/core/utils/Logger';
 import { eventBus } from '@/shared/events/EventBus';
 import { DockerError } from '@/shared/errors/DockerError';
-import DockerService from '@/shared/services/docker/DockerService';
+import { agentRegistry } from '@/modules/agents/transport/AgentRegistry';
 import Sandbox from '@/modules/sandboxes/models/Sandbox';
 import Session from '@/modules/sessions/models/Session';
 
@@ -11,16 +11,12 @@ const ACTIVE_SESSION_STATUSES = ['starting', 'running', 'waiting_input', 'idle']
 
 /**
  * Detects sandboxes and sessions that claim to be active after their container/tmux process
- * died. Stale rows become error so Fleet never presents a dead agent as running.
+ * died. Stale rows become error so Fleet never presents a dead agent as running. Containers live
+ * on owners' agents, so an owner whose agent is offline is skipped — a disconnected tunnel is not
+ * evidence the container died.
  */
 export default class HealthMonitorQueue extends BaseQueue<Record<string, never>>{
     readonly name = 'health-monitor';
-    #docker: DockerService;
-
-    constructor(docker: DockerService = new DockerService()){
-        super();
-        this.#docker = docker;
-    }
 
     startWorker(){
         const worker = super.startWorker();
@@ -33,8 +29,9 @@ export default class HealthMonitorQueue extends BaseQueue<Record<string, never>>
 
         for(const sandbox of runningSandboxes){
             if(!sandbox.containerId) continue;
+            if(!agentRegistry.hasAgent(sandbox.ownerId)) continue;
             try{
-                if(await this.#docker.get(sandbox.containerId).isRunning()) continue;
+                if(await agentRegistry.dockerFor(sandbox.ownerId).get(sandbox.containerId).isRunning()) continue;
 
                 const query = Sandbox.createQueryBuilder()
                     .update(Sandbox)
@@ -59,8 +56,9 @@ export default class HealthMonitorQueue extends BaseQueue<Record<string, never>>
         const activeSessions = await Session.findBy({ status: In([...ACTIVE_SESSION_STATUSES]) });
         for(const session of activeSessions){
             if(!session.containerId || !session.tmuxWindow) continue;
+            if(!agentRegistry.hasAgent(session.ownerId)) continue;
             try{
-                const container = this.#docker.get(session.containerId);
+                const container = agentRegistry.dockerFor(session.ownerId).get(session.containerId);
                 let alive = await container.isRunning();
                 if(alive){
                     const probe = await container.exec(['tmux', 'has-session', '-t', session.tmuxWindow]);

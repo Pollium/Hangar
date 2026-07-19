@@ -1,0 +1,23 @@
+{
+  "name": "@cloud-code/agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@cloud-code/contracts": "*",
+    "dockerode": "^4.0.9",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.44",
+    "@types/node": "^26.1.1",
+    "@types/ws": "^8.5.12",
+    "tsx": "^4.23.0",
+    "typescript": "^5.9.3"
+  }
+}

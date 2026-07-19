@@ -1,6 +1,5 @@
 import { DockerError } from '@/shared/errors/DockerError';
-import type ContainerHandle from '@/shared/services/docker/ContainerHandle';
-import type { PtyStream } from '@/shared/services/docker/contracts';
+import type { IContainerHandle, PtyStream } from '@/shared/services/docker/contracts';
 import type { TerminalDimensions } from '@cloud-code/contracts/modules/session/terminal';
 
 const ensureFlights = new Map<string, Promise<void>>();
@@ -16,7 +15,7 @@ export default class TmuxService{
         return `cc-${sessionId}`;
     }
 
-    async hasSession(handle: ContainerHandle, name: string): Promise<boolean>{
+    async hasSession(handle: IContainerHandle, name: string): Promise<boolean>{
         const { exitCode } = await handle.exec(['tmux', 'has-session', '-t', name]);
         if(exitCode === 0) return true;
         if(exitCode === 1) return false;
@@ -25,7 +24,7 @@ export default class TmuxService{
 
     /** Creates the detached session running `cmd` with `env`, unless it already exists. */
     async ensureSession(
-        handle: ContainerHandle,
+        handle: IContainerHandle,
         name: string,
         cmd: string[],
         env: string[],
@@ -62,7 +61,7 @@ export default class TmuxService{
         }
     }
 
-    async resizeWindow(handle: ContainerHandle, name: string, dimensions: TerminalDimensions): Promise<void>{
+    async resizeWindow(handle: IContainerHandle, name: string, dimensions: TerminalDimensions): Promise<void>{
         const result = await handle.exec([
             'tmux', 'resize-window', '-t', name,
             '-x', String(dimensions.cols), '-y', String(dimensions.rows)
@@ -70,7 +69,7 @@ export default class TmuxService{
         if(result.exitCode !== 0) throw DockerError.ExecFailed('tmux-resize-window');
     }
 
-    async kill(handle: ContainerHandle, name: string): Promise<void>{
+    async kill(handle: IContainerHandle, name: string): Promise<void>{
         const result = await handle.exec(['tmux', 'kill-session', '-t', name]);
         if(result.exitCode !== 0 && await this.hasSession(handle, name)){
             throw DockerError.ExecFailed('tmux-kill-session');
@@ -80,18 +79,18 @@ export default class TmuxService{
     }
 
     /** Types a line into the session's pane and submits it (used for scheduled prompts). */
-    async sendKeys(handle: ContainerHandle, name: string, text: string): Promise<void>{
+    async sendKeys(handle: IContainerHandle, name: string, text: string): Promise<void>{
         const result = await handle.exec(['tmux', 'send-keys', '-t', name, text, 'Enter']);
         if(result.exitCode !== 0) throw DockerError.ExecFailed('tmux-send-keys');
     }
 
     /** Opens a PTY attached to the tmux session — the stream the terminal gateway bridges. */
-    attach(handle: ContainerHandle, name: string): Promise<PtyStream>{
+    attach(handle: IContainerHandle, name: string): Promise<PtyStream>{
         return handle.openPty(['tmux', 'attach-session', '-t', name]);
     }
 
     /** Plain-text snapshot of the current pane, replayed to a client on join. */
-    async capture(handle: ContainerHandle, name: string): Promise<string>{
+    async capture(handle: IContainerHandle, name: string): Promise<string>{
         const result = await handle.exec(['tmux', 'capture-pane', '-p', '-t', name]);
         if(result.exitCode !== 0) throw DockerError.ExecFailed('tmux-capture');
         return result.output;

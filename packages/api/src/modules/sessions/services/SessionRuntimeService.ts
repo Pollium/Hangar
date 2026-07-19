@@ -5,8 +5,7 @@ import RuntimeError from '@/shared/errors/RuntimeError';
 import SandboxService from '@/modules/sandboxes/services/SandboxService';
 import CredentialService from '@/modules/credentials/services/CredentialService';
 import { getAdapter } from '@/modules/clis/adapters/registry';
-import type ContainerHandle from '@/shared/services/docker/ContainerHandle';
-import type { PtyStream } from '@/shared/services/docker/contracts';
+import type { IContainerHandle, PtyStream } from '@/shared/services/docker/contracts';
 import type { TerminalDimensions } from '@cloud-code/contracts/modules/session/terminal';
 import Session from '../models/Session';
 import { SessionError } from '../contracts/domain/errors';
@@ -264,12 +263,12 @@ export default class SessionRuntimeService{
         return current;
     }
 
-    async #container(session: Session): Promise<ContainerHandle>{
+    async #container(session: Session): Promise<IContainerHandle>{
         const { handle } = await this.#sandboxes.ensureRunning(session.ownerId, session.projectId);
         return handle;
     }
 
-    async #install(handle: ContainerHandle, cmd: string[]): Promise<void>{
+    async #install(handle: IContainerHandle, cmd: string[]): Promise<void>{
         const result = await handle.exec(cmd);
         if(result.exitCode !== 0) throw DockerError.ExecFailed('cli-install');
     }

@@ -1,0 +1,56 @@
+import { config } from '@/shared/config';
+import { agentRegistry } from '../transport/AgentRegistry';
+import { generateSecret, hashSecret, composeToken } from './AgentTokenService';
+import Agent from '../models/Agent';
+import { AgentError } from '../contracts/domain/errors';
+import type { Agent as AgentView, CreatedAgent } from '@cloud-code/contracts/modules/agent/domain';
+import type { CreateAgentInput } from '@cloud-code/contracts/modules/agent/http';
+
+export default class AgentService{
+    async list(userId: number): Promise<AgentView[]>{
+        const agents = await Agent.findBy({ ownerId: userId });
+        return agents.map((agent) => this.#view(agent));
+    }
+
+    async create(userId: number, input: CreateAgentInput): Promise<CreatedAgent>{
+        const secret = generateSecret();
+        const agent = await Agent.create({
+            ownerId: userId,
+            name: input.name.trim(),
+            tokenHash: hashSecret(secret),
+            lastSeenAt: null
+        }).save();
+
+        const token = composeToken(agent.id, secret);
+        return { agent: this.#view(agent), token, installCommand: this.#installCommand(token) };
+    }
+
+    async remove(userId: number, agentId: number): Promise<void>{
+        const agent = await Agent.findOneBy({ id: agentId, ownerId: userId });
+        if(!agent) throw AgentError.NotFound();
+        await agent.remove();
+    }
+
+    #view(agent: Agent): AgentView{
+        return {
+            id: agent.id,
+            name: agent.name,
+            status: agentRegistry.isOnline(agent.ownerId, agent.id) ? 'online' : 'offline',
+            lastSeenAt: agent.lastSeenAt ? agent.lastSeenAt.toISOString() : null,
+            createdAt: agent.createdAt.toISOString(),
+            updatedAt: agent.updatedAt.toISOString()
+        };
+    }
+
+    // The agent runs as a container that only dials out — the Docker socket stays on the user's
+    // VPS and is never exposed. The image comes from config so it can change without a rebuild.
+    #installCommand(token: string): string{
+        return [
+            'docker run -d --name cloud-code-agent --restart unless-stopped --pull always',
+            '-v /var/run/docker.sock:/var/run/docker.sock',
+            `-e CLOUD_CODE_URL=${config.publicApiUrl}`,
+            `-e CLOUD_CODE_TOKEN=${token}`,
+            config.agentImage
+        ].join(' ');
+    }
+}

@@ -38,14 +38,15 @@ export default class CodespaceService{
     #jwt = new JWTService();
 
     /**
-     * Authorizes access, ensures the sandbox is up, and launches code-server if it isn't
-     * already running. `ensureSession` is idempotent, so repeated opens just no-op.
+     * Authorizes access, ensures the sandbox + code-server are up on the owner's agent, and mints
+     * the short-lived iframe ticket. The token carries owner + container so the proxy can open the
+     * tunnel with no further lookup. `ensureSession` is idempotent, so repeated opens no-op.
      */
-    async ensureRunning(userId: number, projectId: number): Promise<void>{
+    async prepare(userId: number, projectId: number): Promise<{ token: string; path: string }>{
         // SandboxService.ensureRunning skips the ownership check on the already-running path,
         // so gate access here explicitly (throws Forbidden for non-members).
         await this.#projects.get(userId, projectId);
-        const { handle } = await this.#sandboxes.ensureRunning(userId, projectId);
+        const { sandbox, handle } = await this.#sandboxes.ensureRunning(userId, projectId);
         await this.#tmux.ensureSession(
             handle,
             CODESPACE_TMUX,
@@ -61,9 +62,13 @@ export default class CodespaceService{
             [],
             '/workspace'
         );
-    }
 
-    issueToken(userId: number, projectId: number): string{
-        return this.#jwt.signCodespace(userId, projectId);
+        const token = this.#jwt.signCodespace({
+            userId,
+            projectId,
+            ownerId: sandbox.ownerId,
+            containerId: handle.id
+        });
+        return { token, path: `/codespace/${projectId}/` };
     }
 }

@@ -8,6 +8,8 @@ export interface TokenPayload{
 export interface CodespacePayload{
     userId: number;
     projectId: number;
+    ownerId: number;
+    containerId: string;
 }
 
 export default class JWTService{
@@ -24,15 +26,29 @@ export default class JWTService{
      * and is exchanged for an httpOnly cookie, so the TTL is deliberately tiny and the scope
      * claim keeps a normal session token from ever being usable as a codespace key.
      */
-    signCodespace(userId: number, projectId: number): string{
-        return jwt.sign({ sub: String(userId), scope: 'codespace', projectId }, config.jwtSecret, { expiresIn: '2m' });
+    signCodespace(payload: CodespacePayload): string{
+        return jwt.sign({
+            sub: String(payload.userId),
+            scope: 'codespace',
+            projectId: payload.projectId,
+            ownerId: payload.ownerId,
+            containerId: payload.containerId
+        }, config.jwtSecret, { expiresIn: '2m' });
     }
 
     verifyCodespace(token: string): CodespacePayload{
-        const payload = jwt.verify(token, config.jwtSecret) as TokenPayload & { scope?: string; projectId?: number };
-        if(payload.scope !== 'codespace' || typeof payload.projectId !== 'number'){
+        const payload = jwt.verify(token, config.jwtSecret) as TokenPayload & {
+            scope?: string; projectId?: number; ownerId?: number; containerId?: string;
+        };
+        if(payload.scope !== 'codespace' || typeof payload.projectId !== 'number'
+            || typeof payload.ownerId !== 'number' || typeof payload.containerId !== 'string'){
             throw new Error('not a codespace token');
         }
-        return { userId: Number(payload.sub), projectId: payload.projectId };
+        return {
+            userId: Number(payload.sub),
+            projectId: payload.projectId,
+            ownerId: payload.ownerId,
+            containerId: payload.containerId
+        };
     }
 }

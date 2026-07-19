@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { ScrollShadow } from '@heroui/react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings, Plus, Code2 } from 'lucide-react';
+import { LayoutDashboard, Settings, Plus, Code2, Server } from 'lucide-react';
 import { SessionSidebar } from '@/modules/sessions/components/SessionSidebar';
 import { SessionSearch } from '@/modules/sessions/components/SessionSearch';
 import { NewSessionModal } from '@/modules/sessions/components/NewSessionModal';
@@ -22,6 +22,7 @@ import type { Theme } from '@/shared/utils/theme';
 const NAV = [
     { to: '/', label: 'Overview', icon: LayoutDashboard, end: true },
     { to: '/codespace', label: 'Codespace', icon: Code2 },
+    { to: '/agents', label: 'Compute', icon: Server },
     { to: '/settings', label: 'Environment', icon: Settings }
 ];
 
@@ -128,7 +129,7 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
                 </main>
             </div>
 
-            <nav className='fixed inset-x-0 bottom-0 z-50 grid h-14 grid-cols-3 border-t border-hairline bg-background/95 backdrop-blur md:hidden' aria-label='Mobile navigation'>
+            <nav className='fixed inset-x-0 bottom-0 z-50 grid h-14 grid-cols-4 border-t border-hairline bg-background/95 backdrop-blur md:hidden' aria-label='Mobile navigation'>
                 {NAV.map((item) => {
                     const Icon = item.icon;
                     return (
