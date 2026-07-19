@@ -19,8 +19,8 @@ export const UserMenu = ({ user, theme, onToggleTheme, onSignOut }: Props) => {
     return (
         <Dropdown.Root>
             <Dropdown.Trigger className='flex min-w-0 items-center gap-2 rounded-md px-1.5 py-1 outline-none transition-colors hover:bg-foreground/[0.05] data-[open]:bg-foreground/[0.05]'>
-                <span className='grid size-6 shrink-0 place-items-center rounded-full bg-foreground/10 text-[11px] font-medium text-foreground'>
-                    {initial}
+                <span className='grid size-6 shrink-0 place-items-center overflow-hidden rounded-full bg-foreground/10 text-[11px] font-medium text-foreground'>
+                    {user?.avatarUrl ? <img src={user.avatarUrl} alt='' className='size-full object-cover' /> : initial}
                 </span>
                 <span className='hidden max-w-[10rem] truncate text-xs text-muted sm:inline'>{user?.email ?? '—'}</span>
             </Dropdown.Trigger>
@@ -30,7 +30,7 @@ export const UserMenu = ({ user, theme, onToggleTheme, onSignOut }: Props) => {
                         {theme === 'dark' ? <Sun className='size-4' aria-hidden='true' /> : <Moon className='size-4' aria-hidden='true' />}
                         {theme === 'dark' ? 'Light mode' : 'Dark mode'}
                     </Dropdown.Item>
-                    <Dropdown.Item id='settings' onAction={() => navigate('/settings')}>
+                    <Dropdown.Item id='settings' onAction={() => navigate('/account')}>
                         <Settings className='size-4' aria-hidden='true' />
                         Settings
                     </Dropdown.Item>

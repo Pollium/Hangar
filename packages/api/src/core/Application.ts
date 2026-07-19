@@ -38,6 +38,9 @@ export default class Application{
             // CORS_ORIGIN may list several origins (comma-separated) so the web dev server can
             // land on any of a few ports without breaking cross-origin requests.
             origin: config.corsOrigin.split(',').map((o) => o.trim()).filter(Boolean),
+            // @fastify/cors defaults to GET,HEAD,POST — which silently blocks the PATCH/PUT/DELETE
+            // preflights the API relies on (profile edits, deletes). Enumerate every verb we use.
+            methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
             credentials: true
         });
         await this.#app.register(multipart, {

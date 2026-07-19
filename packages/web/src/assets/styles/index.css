@@ -93,3 +93,15 @@ body {
 @media (prefers-reduced-motion: reduce) {
     .animate-enter { animation: none; }
 }
+
+/* The combobox text input carries HeroUI's own bordered input styling; inside our
+   bordered input-group shell that reads as a double border. Strip it so only the
+   shell's border (and its focus-within accent) shows. */
+.combo-box__input-group [data-slot="input"] {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    outline: none;
+    padding: 0;
+    height: auto;
+}

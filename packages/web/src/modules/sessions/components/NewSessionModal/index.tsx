@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ListBox, ListBoxItem, Modal, Select } from '@heroui/react';
+import { Modal } from '@heroui/react';
 import { sessionApi } from '@/modules/sessions/api/api';
 import { cliApi } from '@/modules/projects/api/api';
+import { Combobox } from '@/shared/components/ui/Combobox';
 import { useActiveProjectStore } from '@/modules/projects/store/activeProject';
 import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModal';
 import type { CliDescriptor } from '@cloud-code/contracts/modules/cli/domain';
 
-const input = 'flex h-10 items-center justify-between gap-2 rounded-md border border-hairline bg-surface px-3 text-sm text-foreground outline-none transition-colors focus:border-accent data-[open]:border-accent';
 const textInput = 'rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent placeholder:text-muted';
 
 export const NewSessionModal = () => {
@@ -58,22 +58,7 @@ export const NewSessionModal = () => {
                             <div className='flex flex-col gap-4'>
                                 <label className='flex flex-col gap-1.5'>
                                     <span className='mono-label text-muted/70'>CLI</span>
-                                    <Select.Root
-                                        selectedKey={cliType}
-                                        onSelectionChange={(key) => setCliType(String(key))}
-                                    >
-                                        <Select.Trigger className={input}>
-                                            <Select.Value />
-                                            <Select.Indicator />
-                                        </Select.Trigger>
-                                        <Select.Popover>
-                                            <ListBox>
-                                                {clis.map((cli) => (
-                                                    <ListBoxItem key={cli.id} id={cli.id}>{cli.label}</ListBoxItem>
-                                                ))}
-                                            </ListBox>
-                                        </Select.Popover>
-                                    </Select.Root>
+                                    <Combobox items={clis} value={cliType} onChange={setCliType} placeholder='Search CLIs…' ariaLabel='CLI' />
                                 </label>
                                 <label className='flex flex-col gap-1.5'>
                                     <span className='mono-label text-muted/70'>Title</span>

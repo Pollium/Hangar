@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CircleAlert, LoaderCircle, Plus, Radar, RotateCcw } from 'lucide-react';
+import { CircleAlert, LoaderCircle, Plus, Radar } from 'lucide-react';
 import { SessionCard } from '@/modules/dashboard/components/SessionCard';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
 import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModal';
@@ -48,13 +48,11 @@ const GROUPS: Array<{
 
 interface Props{
     sessions: Session[];
-    isFiltered: boolean;
     loading: boolean;
     error: string | null;
-    onClearFilters: () => void;
 }
 
-export const FleetGrid = ({ sessions, isFiltered, loading, error, onClearFilters }: Props) => {
+export const FleetGrid = ({ sessions, loading, error }: Props) => {
     const [now, setNow] = useState(() => Date.now());
 
     useEffect(() => {
@@ -99,20 +97,9 @@ export const FleetGrid = ({ sessions, isFiltered, loading, error, onClearFilters
         return (
             <EmptyState
                 icon={Radar}
-                title={isFiltered ? 'No matching sessions' : 'Your fleet is empty'}
-                description={isFiltered
-                    ? 'Try another search or clear the current filters.'
-                    : 'Start an agent session and it will appear here with live status updates.'}
-                action={isFiltered ? (
-                    <button
-                        type='button'
-                        onClick={onClearFilters}
-                        className='inline-flex h-9 items-center gap-2 rounded-lg border border-hairline px-3 text-xs font-medium text-foreground hover:bg-foreground/[0.04]'
-                    >
-                        <RotateCcw className='size-3.5' aria-hidden='true' />
-                        Clear filters
-                    </button>
-                ) : (
+                title='Your fleet is empty'
+                description='Start an agent session and it will appear here with live status updates.'
+                action={(
                     <button
                         type='button'
                         onClick={() => useNewSessionModalStore.getState().open()}

@@ -5,7 +5,7 @@ export const TerminalView = ({ sessionId }: { sessionId: number }) => {
     const failed = Boolean(error) || agentStatus === 'error';
 
     return (
-        <div className='flex h-full w-full min-w-0 flex-col'>
+        <div className='flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl'>
             {failed && (
                 <div role='alert' className='flex shrink-0 items-center justify-between gap-4 border-b border-danger/30 bg-danger/10 px-4 py-2 text-xs text-foreground'>
                     <span className='truncate'>{error ? `Session failed: ${error}` : 'The CLI process exited unexpectedly.'}</span>

@@ -1,3 +1,4 @@
+import { ScrollShadow } from '@heroui/react';
 import { useParams } from 'react-router-dom';
 import { SessionItem } from '@/modules/sessions/components/SessionItem';
 import type { Session } from '@cloud-code/contracts/modules/session/domain';
@@ -12,7 +13,7 @@ export const SessionSidebar = ({ sessions, loading }: Props) => {
     const activeId = params.id ? Number(params.id) : null;
 
     return (
-        <div className='flex min-h-0 flex-1 flex-col overflow-y-auto pb-2'>
+        <ScrollShadow className='flex min-h-0 flex-1 flex-col pb-2'>
             {loading && sessions.length === 0 && (
                 <p className='px-4 py-2 text-xs text-muted'>Loading…</p>
             )}
@@ -22,6 +23,6 @@ export const SessionSidebar = ({ sessions, loading }: Props) => {
             {sessions.map((session) => (
                 <SessionItem key={session.id} session={session} active={session.id === activeId} />
             ))}
-        </div>
+        </ScrollShadow>
     );
 };

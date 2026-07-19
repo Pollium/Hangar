@@ -31,7 +31,7 @@ const SettingsPage = () => {
                         )}
                     />
                 </Row>
-                <Row grow>
+                <Row grow className='mt-2'>
                     <CredentialList credentials={credentials} onChanged={refresh} />
                 </Row>
             </Canvas>

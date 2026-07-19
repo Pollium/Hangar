@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { ScrollShadow } from '@heroui/react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Settings, Plus } from 'lucide-react';
 import { SessionSidebar } from '@/modules/sessions/components/SessionSidebar';
@@ -8,6 +9,7 @@ import { NewSessionModal } from '@/modules/sessions/components/NewSessionModal';
 import { UserMenu } from '@/modules/sessions/components/UserMenu';
 import { ProjectSwitcher } from '@/modules/projects/components/ProjectSwitcher';
 import { NewProjectModal } from '@/modules/projects/components/NewProjectModal';
+import { ShareProjectButton } from '@/modules/projects/components/ShareProjectButton';
 import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModal';
 import { useNewProjectModalStore } from '@/modules/projects/store/newProjectModal';
 import { useFleet } from '@/modules/sessions/hooks/useFleet';
@@ -116,11 +118,12 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
                     >
                         <Plus className='size-4' aria-hidden='true' />
                     </button>
+                    <ShareProjectButton />
                     <NotificationBell />
                     <UserMenu user={user} theme={theme} onToggleTheme={toggleTheme} onSignOut={signOut} />
                 </header>
                 <main className='min-h-0 flex-1 overflow-hidden pb-14 md:pb-0'>
-                    {bleed ? children : <div className='h-full overflow-y-auto pt-8'>{children}</div>}
+                    {bleed ? children : <ScrollShadow className='h-full pt-8'>{children}</ScrollShadow>}
                 </main>
             </div>
 

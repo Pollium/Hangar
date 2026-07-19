@@ -31,7 +31,6 @@ export const ProjectInviteLink = ({ projectId, inviteToken, onRotated }: {
 
     return (
         <div className='flex flex-col gap-1.5'>
-            <span className='mono-label text-muted/70'>Invite link</span>
             <div className='flex items-center gap-2'>
                 <input className={input} value={link} readOnly onFocus={(event) => event.target.select()} />
                 <button

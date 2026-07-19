@@ -1,4 +1,4 @@
-import { useMemo, useState, type ComponentType } from 'react';
+import { useMemo, type ComponentType } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import {
     Activity,
@@ -13,25 +13,6 @@ import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { useFleet } from '@/modules/sessions/hooks/useFleet';
 import { FleetGrid } from '@/modules/dashboard/components/FleetGrid';
 import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModal';
-import type { SessionStatus } from '@cloud-code/contracts/modules/session/domain';
-
-type FleetFilter = 'all' | 'attention' | 'active' | 'idle' | 'error' | 'stopped';
-
-const FILTERS: Array<{ id: FleetFilter; label: string }> = [
-    { id: 'all', label: 'All' },
-    { id: 'attention', label: 'Needs input' },
-    { id: 'active', label: 'Active' },
-    { id: 'idle', label: 'Idle' },
-    { id: 'error', label: 'Errors' },
-    { id: 'stopped', label: 'Stopped' }
-];
-
-const matchesFilter = (status: SessionStatus, filter: FleetFilter): boolean => {
-    if(filter === 'all') return true;
-    if(filter === 'attention') return status === 'waiting_input';
-    if(filter === 'active') return status === 'running' || status === 'starting';
-    return status === filter;
-};
 
 interface MetricProps{
     label: string;
@@ -54,12 +35,6 @@ const Metric = ({ label, value, icon: Icon, tone }: MetricProps) => (
 
 const Overview = () => {
     const { sessions, loading, error } = useFleet();
-    const [filter, setFilter] = useState<FleetFilter>('all');
-
-    const visible = useMemo(
-        () => sessions.filter((session) => matchesFilter(session.status, filter)),
-        [filter, sessions]
-    );
 
     const counts = useMemo(() => ({
         attention: sessions.filter((session) => session.status === 'waiting_input').length,
@@ -67,8 +42,6 @@ const Overview = () => {
         idle: sessions.filter((session) => session.status === 'idle').length,
         error: sessions.filter((session) => session.status === 'error').length
     }), [sessions]);
-
-    const clearFilters = () => setFilter('all');
 
     const metricValue = (value: number): number | string => loading && sessions.length === 0 ? '—' : value;
 
@@ -101,26 +74,6 @@ const Overview = () => {
                     </div>
                 </Row>
 
-                <Row max='max-w-6xl' className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-end'>
-                    <div className='flex flex-wrap items-center gap-1' aria-label='Filter sessions'>
-                        {FILTERS.map((item) => (
-                            <button
-                                key={item.id}
-                                type='button'
-                                onClick={() => setFilter(item.id)}
-                                aria-pressed={filter === item.id}
-                                className={`h-8 rounded-md px-3 text-xs transition-colors ${
-                                    filter === item.id
-                                        ? 'bg-foreground text-background'
-                                        : 'text-muted hover:bg-foreground/[0.05] hover:text-foreground'
-                                }`}
-                            >
-                                {item.label}
-                            </button>
-                        ))}
-                    </div>
-                </Row>
-
                 {error && (
                     <Row max='max-w-6xl'>
                         <div role='alert' className='flex items-center gap-2 border-l-2 border-danger bg-danger/10 px-5 py-3 text-xs text-foreground sm:px-8'>
@@ -130,13 +83,11 @@ const Overview = () => {
                     </Row>
                 )}
 
-                <Row grow max='max-w-6xl'>
+                <Row grow max='max-w-6xl' className='mt-2'>
                     <FleetGrid
-                        sessions={visible}
-                        isFiltered={filter !== 'all'}
+                        sessions={sessions}
                         loading={loading}
                         error={error}
-                        onClearFilters={clearFilters}
                     />
                 </Row>
             </Canvas>
