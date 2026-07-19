@@ -11,7 +11,7 @@ export interface CreateContainerSpec{
     name: string;
     /** Fully resolved `KEY=value` entries — secrets are decrypted immediately before this call. */
     env: string[];
-    /** Ownership/discovery labels, e.g. { 'cloud-code.projectId': '12', 'cloud-code.owner': '3' }. */
+    /** Ownership/discovery labels, e.g. { 'hangar.projectId': '12', 'hangar.owner': '3' }. */
     labels: Record<string, string>;
     workdir: string;
     /** Named volume mounted at /workspace for repo + CLI config persistence. */

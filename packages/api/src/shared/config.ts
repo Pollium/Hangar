@@ -43,7 +43,7 @@ export const config = {
     publicApiUrl: optional('PUBLIC_API_URL') ?? optional('WEB_URL') ?? corsOrigin,
     // Published agent image referenced by the "Connect a VPS" install command. Kept in env (not
     // code) so the registry/name can change — e.g. after renaming the project — without a rebuild.
-    agentImage: optional('AGENT_IMAGE') ?? 'ghcr.io/pollium/cloud-code-agent:latest',
+    agentImage: optional('AGENT_IMAGE') ?? 'ghcr.io/pollium/hangar-agent:latest',
     // Open registration. Set false on a personal VPS to run single-admin (see auth module).
     allowSignup: optional('ALLOW_SIGNUP') !== 'false',
 
@@ -65,8 +65,8 @@ export const config = {
     docker: {
         socket: optional('DOCKER_SOCKET') ?? '/var/run/docker.sock',
         namespace: sandboxNamespace,
-        baseImage: optional('SANDBOX_BASE_IMAGE') ?? 'cloud-code/sandbox-base:ubuntu',
-        network: optional('SANDBOX_NETWORK') ?? `cc-${sandboxNamespace}-sandboxes`,
+        baseImage: optional('SANDBOX_BASE_IMAGE') ?? 'hangar/sandbox-base:ubuntu',
+        network: optional('SANDBOX_NETWORK') ?? `hangar-${sandboxNamespace}-sandboxes`,
         // Per-sandbox resource ceilings; overridable per project within these limits.
         defaultMemoryMb: Number(optional('SANDBOX_MEMORY_MB') ?? 2048),
         defaultCpus: Number(optional('SANDBOX_CPUS') ?? 2),

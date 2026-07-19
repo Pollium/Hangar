@@ -1,6 +1,6 @@
 export type Theme = 'light' | 'dark';
 
-const STORAGE_KEY = 'cloud-code.theme';
+const STORAGE_KEY = 'hangar.theme';
 
 const resolveInitial = (): Theme => {
     const fromQuery = new URLSearchParams(window.location.search).get('theme');

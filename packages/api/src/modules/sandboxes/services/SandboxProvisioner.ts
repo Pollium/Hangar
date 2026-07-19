@@ -12,18 +12,18 @@ import type Sandbox from '../models/Sandbox';
  */
 export default class SandboxProvisioner{
     containerName(projectId: number): string{
-        return `cc-${config.docker.namespace}-project-${projectId}`;
+        return `hangar-${config.docker.namespace}-project-${projectId}`;
     }
 
     volumeName(projectId: number): string{
-        return `cc-${config.docker.namespace}-project-${projectId}`;
+        return `hangar-${config.docker.namespace}-project-${projectId}`;
     }
 
     async provision(project: Project, sandbox: Sandbox, docker: IDockerService): Promise<IContainerHandle>{
         const labels = {
-            'cloud-code.instanceId': config.docker.namespace,
-            'cloud-code.projectId': String(project.id),
-            'cloud-code.owner': String(project.ownerId)
+            'hangar.instanceId': config.docker.namespace,
+            'hangar.projectId': String(project.id),
+            'hangar.owner': String(project.ownerId)
         };
 
         await docker.ensureNetwork(config.docker.network);

@@ -28,7 +28,7 @@ const makeSession = async (): Promise<Session> => {
         cliType: 'opencode',
         status: 'running',
         containerId: 'container-1',
-        tmuxWindow: 'cc-42',
+        tmuxWindow: 'hangar-42',
         cwd: '/workspace',
         lastActiveAt: new Date('2026-01-01T00:00:00.000Z')
     }).save() as Promise<Session>;

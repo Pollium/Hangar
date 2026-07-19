@@ -46,10 +46,10 @@ export default class AgentService{
     // VPS and is never exposed. The image comes from config so it can change without a rebuild.
     #installCommand(token: string): string{
         return [
-            'docker run -d --name cloud-code-agent --restart unless-stopped --pull always',
+            'docker run -d --name hangar-agent --restart unless-stopped --pull always',
             '-v /var/run/docker.sock:/var/run/docker.sock',
-            `-e CLOUD_CODE_URL=${config.publicApiUrl}`,
-            `-e CLOUD_CODE_TOKEN=${token}`,
+            `-e HANGAR_URL=${config.publicApiUrl}`,
+            `-e HANGAR_TOKEN=${token}`,
             config.agentImage
         ].join(' ');
     }

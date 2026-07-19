@@ -19,7 +19,7 @@ describe('TmuxService', () => {
 
         await tmux.ensureSession(
             handle,
-            'cc-7',
+            'hangar-7',
             ['bash', '-lc', 'cd /workspace && claude'],
             ['ANTHROPIC_API_KEY=sk-x', 'custom_value=  value=with spaces  '],
             '/workspace',
@@ -28,7 +28,7 @@ describe('TmuxService', () => {
 
         const newSession = exec.mock.calls.map((call) => call[0]).find((cmd) => cmd[1] === 'new-session');
         expect(newSession).toEqual([
-            'tmux', 'new-session', '-d', '-s', 'cc-7', '-x', '180', '-y', '52', '-c', '/workspace',
+            'tmux', 'new-session', '-d', '-s', 'hangar-7', '-x', '180', '-y', '52', '-c', '/workspace',
             '-e', 'ANTHROPIC_API_KEY=sk-x',
             '-e', 'custom_value=  value=with spaces  ',
             'bash', '-lc', 'cd /workspace && claude'
@@ -39,7 +39,7 @@ describe('TmuxService', () => {
         const tmux = new TmuxService();
         const { handle, exec } = handleWith(() => ({ output: '', exitCode: 0 }));
 
-        await tmux.ensureSession(handle, 'cc-7', ['bash'], [], '/workspace');
+        await tmux.ensureSession(handle, 'hangar-7', ['bash'], [], '/workspace');
 
         expect(exec.mock.calls.some((call) => call[0][1] === 'new-session')).toBe(false);
     });
@@ -48,7 +48,7 @@ describe('TmuxService', () => {
         const tmux = new TmuxService();
         const { handle } = handleWith((cmd) => ({ output: 'failed', exitCode: cmd[1] === 'has-session' ? 1 : 2 }));
 
-        await expect(tmux.ensureSession(handle, 'cc-7', ['bash'], [], '/workspace')).rejects.toMatchObject({
+        await expect(tmux.ensureSession(handle, 'hangar-7', ['bash'], [], '/workspace')).rejects.toMatchObject({
             message: 'Docker::ExecFailed:tmux-new-session'
         });
     });
@@ -60,7 +60,7 @@ describe('TmuxService', () => {
             exitCode: cmd[1] === 'has-session' ? 1 : 0
         }));
 
-        await expect(tmux.ensureSession(handle, 'cc-7', ['bash'], [], '/workspace')).rejects.toMatchObject({
+        await expect(tmux.ensureSession(handle, 'hangar-7', ['bash'], [], '/workspace')).rejects.toMatchObject({
             message: 'Docker::ExecFailed:tmux-session-exited'
         });
     });
@@ -79,8 +79,8 @@ describe('TmuxService', () => {
         const handle = { id: 'container-concurrent', exec } as unknown as IContainerHandle;
 
         await Promise.all([
-            tmux.ensureSession(handle, 'cc-9', ['bash'], [], '/workspace'),
-            tmux.ensureSession(handle, 'cc-9', ['bash'], [], '/workspace')
+            tmux.ensureSession(handle, 'hangar-9', ['bash'], [], '/workspace'),
+            tmux.ensureSession(handle, 'hangar-9', ['bash'], [], '/workspace')
         ]);
 
         expect(exec.mock.calls.filter((call) => call[0][1] === 'new-session')).toHaveLength(1);
@@ -90,7 +90,7 @@ describe('TmuxService', () => {
         const tmux = new TmuxService();
         const { handle } = handleWith(() => ({ output: 'tmux missing', exitCode: 127 }));
 
-        await expect(tmux.hasSession(handle, 'cc-7')).rejects.toMatchObject({
+        await expect(tmux.hasSession(handle, 'hangar-7')).rejects.toMatchObject({
             message: 'Docker::ExecFailed:tmux-has-session'
         });
     });
@@ -102,7 +102,7 @@ describe('TmuxService', () => {
             exitCode: cmd[1] === 'kill-session' ? 2 : 0
         }));
 
-        await expect(tmux.kill(handle, 'cc-7')).rejects.toMatchObject({
+        await expect(tmux.kill(handle, 'hangar-7')).rejects.toMatchObject({
             message: 'Docker::ExecFailed:tmux-kill-session'
         });
     });
@@ -114,17 +114,17 @@ describe('TmuxService', () => {
             exitCode: cmd[1] === 'kill-session' ? 1 : 1
         }));
 
-        await expect(tmux.kill(handle, 'cc-7')).resolves.toBeUndefined();
+        await expect(tmux.kill(handle, 'hangar-7')).resolves.toBeUndefined();
     });
 
     it('resizes an existing tmux window to the browser dimensions', async () => {
         const tmux = new TmuxService();
         const { handle, exec } = handleWith(() => ({ output: '', exitCode: 0 }));
 
-        await tmux.resizeWindow(handle, 'cc-7', { cols: 196, rows: 61 });
+        await tmux.resizeWindow(handle, 'hangar-7', { cols: 196, rows: 61 });
 
         expect(exec).toHaveBeenCalledWith([
-            'tmux', 'resize-window', '-t', 'cc-7', '-x', '196', '-y', '61'
+            'tmux', 'resize-window', '-t', 'hangar-7', '-x', '196', '-y', '61'
         ]);
     });
 
@@ -132,6 +132,6 @@ describe('TmuxService', () => {
         const tmux = new TmuxService();
         const { handle } = handleWith((cmd) => ({ output: cmd[1] === 'capture-pane' ? 'screen text' : '', exitCode: 0 }));
 
-        expect(await tmux.capture(handle, 'cc-7')).toBe('screen text');
+        expect(await tmux.capture(handle, 'hangar-7')).toBe('screen text');
     });
 });

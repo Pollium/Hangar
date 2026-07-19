@@ -1,4 +1,4 @@
-# Cloud Code
+# Hangar
 
 Self-hosted control plane for running coding-agent CLIs (Claude Code, Codex, OpenCode,
 Gemini CLI) 24/7 inside isolated Docker sandboxes, managed from a web UI. Deploy it on your
@@ -36,7 +36,7 @@ The control-plane API drives the host Docker daemon via `dockerode`; agents neve
 ## Deploy
 
 ```bash
-git clone <repo> cloud-code && cd cloud-code
+git clone <repo> hangar && cd hangar
 ./scripts/install.sh          # 1st run: writes .env with generated secrets
 # edit .env → set WEB_DOMAIN, API_DOMAIN, PUBLIC_API_URL, CORS_ORIGIN, WEB_URL
 ./scripts/install.sh          # 2nd run: builds the sandbox image and starts the stack

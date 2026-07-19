@@ -102,7 +102,7 @@ describe('FleetGateway ordering', () => {
             cliType: 'opencode',
             status: 'running',
             containerId: 'container',
-            tmuxWindow: 'cc-81',
+            tmuxWindow: 'hangar-81',
             cwd: '/workspace',
             lastActiveAt: '2026-01-01T00:00:01.000Z'
         };

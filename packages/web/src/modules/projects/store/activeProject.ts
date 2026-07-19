@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-const STORAGE_KEY = 'cloud-code.activeProjectId';
+const STORAGE_KEY = 'hangar.activeProjectId';
 
 const readStored = (): number | null => {
     const raw = localStorage.getItem(STORAGE_KEY);

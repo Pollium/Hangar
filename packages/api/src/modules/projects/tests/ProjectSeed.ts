@@ -11,7 +11,7 @@ export default class ProjectSeed extends Seed{
             name: `Project ${owner.id}`,
             description: '',
             inviteToken: randomBytes(24).toString('base64url'),
-            baseImage: 'cloud-code/sandbox-base:ubuntu',
+            baseImage: 'hangar/sandbox-base:ubuntu',
             defaultCli: 'claude-code',
             ...overrides
         });

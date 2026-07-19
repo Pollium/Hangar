@@ -31,7 +31,7 @@ const InvitePage = () => {
                     onClick={() => navigate('/')}
                     className='rounded-lg border border-hairline px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground/[0.04]'
                 >
-                    Back to Cloud Code
+                    Back to Hangar
                 </button>
             </div>
         );

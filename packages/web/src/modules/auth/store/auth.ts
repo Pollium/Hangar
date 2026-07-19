@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-const STORAGE_KEY = 'cloud-code.token';
+const STORAGE_KEY = 'hangar.token';
 
 const readToken = (): string | null => {
     try{

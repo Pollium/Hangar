@@ -8,7 +8,7 @@ import JWTService, { type CodespacePayload } from '@/modules/auth/services/JWTSe
 import { codeServerPort } from '@/modules/codespaces/services/CodespaceService';
 
 const PATH_RE = /^\/codespace\/(\d+)(?:[/?]|$)/;
-const COOKIE_PREFIX = 'cc_codespace_';
+const COOKIE_PREFIX = 'hangar_codespace_';
 
 const projectFromUrl = (url: string): number | null => {
     const match = PATH_RE.exec(url);

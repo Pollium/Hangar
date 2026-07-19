@@ -28,7 +28,7 @@ if [ ! -f .env ]; then
     JWT=$(openssl rand -hex 32)
     KEY=$(openssl rand -hex 32)
     NAMESPACE="instance-$(openssl rand -hex 6)"
-    NETWORK="cc-${NAMESPACE}-sandboxes"
+    NETWORK="hangar-${NAMESPACE}-sandboxes"
     set_env JWT_SECRET "${JWT}"
     set_env ENCRYPTION_KEY "${KEY}"
     set_env SANDBOX_NAMESPACE "${NAMESPACE}"
@@ -48,15 +48,15 @@ if [ -z "${NAMESPACE}" ]; then
     echo "→ generated missing sandbox namespace (${NAMESPACE})"
 fi
 NETWORK="${SANDBOX_NETWORK:-$(env_value SANDBOX_NETWORK)}"
-if [ -z "${NETWORK}" ] || [ "${NETWORK}" = "cloud-code-sandboxes" ]; then
-    NETWORK="cc-${NAMESPACE}-sandboxes"
+if [ -z "${NETWORK}" ] || [ "${NETWORK}" = "hangar-sandboxes" ]; then
+    NETWORK="hangar-${NAMESPACE}-sandboxes"
     set_env SANDBOX_NETWORK "${NETWORK}"
     echo "→ isolated sandbox network (${NETWORK})"
 fi
 chmod 600 .env
 
 BASE_IMAGE="${SANDBOX_BASE_IMAGE:-$(env_value SANDBOX_BASE_IMAGE)}"
-BASE_IMAGE="${BASE_IMAGE:-cloud-code/sandbox-base:ubuntu}"
+BASE_IMAGE="${BASE_IMAGE:-hangar/sandbox-base:ubuntu}"
 
 echo "→ building sandbox base image (${BASE_IMAGE})"
 docker build -f docker/sandbox-base.Dockerfile -t "${BASE_IMAGE}" .
@@ -68,4 +68,4 @@ docker network inspect "${NETWORK}" >/dev/null 2>&1 \
 echo "→ starting the stack"
 docker compose up -d --build
 
-echo "✓ Cloud Code is up. Web: https://${WEB_DOMAIN:-<WEB_DOMAIN>}  API: https://${API_DOMAIN:-<API_DOMAIN>}"
+echo "✓ Hangar is up. Web: https://${WEB_DOMAIN:-<WEB_DOMAIN>}  API: https://${API_DOMAIN:-<API_DOMAIN>}"

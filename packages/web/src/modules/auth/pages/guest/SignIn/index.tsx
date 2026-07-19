@@ -33,7 +33,7 @@ const SignIn = () => {
     return (
         <AuthShell>
             <div className='mb-6 flex flex-col gap-1'>
-                <h1 className='text-lg font-semibold text-foreground'>Cloud Code</h1>
+                <h1 className='text-lg font-semibold text-foreground'>Hangar</h1>
                 <p className='text-sm text-muted'>Sign in to manage your agent sessions.</p>
             </div>
 
@@ -72,7 +72,7 @@ const SignIn = () => {
             </Form>
 
             <p className='mt-7 text-center text-xs text-muted'>
-                By using Cloud Code, you agree to run agents on infrastructure you control.{' '}
+                By using Hangar, you agree to run agents on infrastructure you control.{' '}
                 <Link href='https://github.com' className='text-foreground'>Learn more</Link>.
             </p>
         </AuthShell>

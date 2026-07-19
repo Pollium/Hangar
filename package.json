@@ -1,5 +1,5 @@
 {
-  "name": "cloud-code",
+  "name": "hangar",
   "packageManager": "pnpm@10.33.0",
   "private": true,
   "type": "module",

@@ -21,7 +21,7 @@ const makeSession = async (status: Session['status'] = 'running'): Promise<Sessi
         cliType: 'opencode',
         status,
         containerId: 'container-1',
-        tmuxWindow: 'cc-runtime',
+        tmuxWindow: 'hangar-runtime',
         cwd: '/workspace',
         lastActiveAt: new Date('2026-01-01T00:00:00.000Z')
     }).save() as Promise<Session>;
@@ -40,7 +40,7 @@ const runtimeWith = (hasSession = true) => {
     } as unknown as CredentialService;
     let alive = hasSession;
     const tmux = {
-        name: vi.fn((id: number) => `cc-${id}`),
+        name: vi.fn((id: number) => `hangar-${id}`),
         hasSession: vi.fn().mockImplementation(async () => alive),
         ensureSession: vi.fn().mockResolvedValue(undefined),
         resizeWindow: vi.fn().mockResolvedValue(undefined),
@@ -70,7 +70,7 @@ describe('SessionRuntimeService', () => {
         expect(tmux.ensureSession).not.toHaveBeenCalled();
         expect(tmux.resizeWindow).toHaveBeenCalledWith(
             expect.objectContaining({ id: 'container-1' }),
-            `cc-${session.id}`,
+            `hangar-${session.id}`,
             { cols: 190, rows: 58 }
         );
     });

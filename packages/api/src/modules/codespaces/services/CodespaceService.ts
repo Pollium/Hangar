@@ -20,7 +20,7 @@ export const codeServerPort = (projectId: number): number => {
 
 // One code-server per project container, owned by tmux like agent sessions — it survives with
 // no viewer attached and re-attaches on the next open, matching the 24/7 sandbox model.
-const CODESPACE_TMUX = 'cc-codespace';
+const CODESPACE_TMUX = 'hangar-codespace';
 
 // code-server's own state (settings, installed extensions, editor/workspace state) lives here on
 // the persisted /workspace volume, so it survives container restarts and recreation — mirroring

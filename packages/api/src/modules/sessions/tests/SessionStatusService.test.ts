@@ -18,7 +18,7 @@ const makeSession = async () => {
         cliType: 'claude-code',
         status: 'running',
         containerId: 'c1',
-        tmuxWindow: 'cc-1',
+        tmuxWindow: 'hangar-1',
         cwd: '/workspace',
         lastActiveAt: new Date()
     });

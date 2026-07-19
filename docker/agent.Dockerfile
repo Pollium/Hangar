@@ -15,5 +15,5 @@ RUN pnpm install --filter @hangar/agent --frozen-lockfile
 COPY packages/contracts packages/contracts
 COPY packages/agent packages/agent
 
-# CLOUD_CODE_URL and CLOUD_CODE_TOKEN are provided at `docker run` time (see the install command).
+# HANGAR_URL and HANGAR_TOKEN are provided at `docker run` time (see the install command).
 CMD ["pnpm", "--filter", "@hangar/agent", "start"]

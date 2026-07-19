@@ -9,8 +9,8 @@ const toWebSocketBase = (url: string): string => url.replace(/^http/, 'ws').repl
 
 export const config = {
     /** Control-plane WebSocket base, e.g. wss://api.example.com (http/https accepted). */
-    url: toWebSocketBase(required('CLOUD_CODE_URL')),
+    url: toWebSocketBase(required('HANGAR_URL')),
     /** Agent token minted in the app (Connect VPS). Authenticates this host to the control plane. */
-    token: required('CLOUD_CODE_TOKEN'),
+    token: required('HANGAR_TOKEN'),
     dockerSocket: process.env.DOCKER_SOCKET ?? '/var/run/docker.sock'
 };

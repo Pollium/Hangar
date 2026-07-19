@@ -28,11 +28,11 @@ describe('UserController', () => {
 
         const res = await request(ctx.app, userRoutes.updateProfile, {
             as: user.id,
-            body: { bio: 'building cloud-code' }
+            body: { bio: 'building hangar' }
         });
 
         expect(res.status).toBe(200);
-        expect(res.data().bio).toBe('building cloud-code');
+        expect(res.data().bio).toBe('building hangar');
     });
 
     it('changes the password with the correct current password', async () => {

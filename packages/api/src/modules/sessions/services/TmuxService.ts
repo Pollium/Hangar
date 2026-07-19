@@ -12,7 +12,7 @@ const ensureFlights = new Map<string, Promise<void>>();
  */
 export default class TmuxService{
     name(sessionId: number): string{
-        return `cc-${sessionId}`;
+        return `hangar-${sessionId}`;
     }
 
     async hasSession(handle: IContainerHandle, name: string): Promise<boolean>{
