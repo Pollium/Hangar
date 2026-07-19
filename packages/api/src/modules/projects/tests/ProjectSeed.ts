@@ -1,19 +1,23 @@
+import { randomBytes } from 'node:crypto';
 import Seed from '@tests/Seed';
 import Project from '../models/Project';
+import ProjectMember from '../models/ProjectMember';
 import type User from '@/modules/user/models/User';
 
 export default class ProjectSeed extends Seed{
-    project(owner: User, overrides: Partial<Project> = {}): Promise<Project>{
+    async project(owner: User, overrides: Partial<Project> = {}): Promise<Project>{
         const entity = Project.create({
             ownerId: owner.id,
             name: `Project ${owner.id}`,
             description: '',
-            repoUrl: null,
+            inviteToken: randomBytes(24).toString('base64url'),
             baseImage: 'cloud-code/sandbox-base:ubuntu',
             defaultCli: 'claude-code',
             ...overrides
         });
-        return entity.save() as Promise<Project>;
+        const saved = await entity.save() as Project;
+        await ProjectMember.create({ projectId: saved.id, userId: owner.id }).save();
+        return saved;
     }
 }
 

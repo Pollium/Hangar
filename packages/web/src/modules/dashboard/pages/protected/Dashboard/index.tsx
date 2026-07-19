@@ -5,15 +5,13 @@ import {
     AlertTriangle,
     CircleAlert,
     Clock3,
-    Plus,
-    Search
+    Plus
 } from 'lucide-react';
 import { AppShell } from '@/modules/sessions/components/AppShell';
 import { Canvas, Row } from '@/shared/components/ui/Blueprint';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { useFleet } from '@/modules/dashboard/hooks/useFleet';
+import { useFleet } from '@/modules/sessions/hooks/useFleet';
 import { FleetGrid } from '@/modules/dashboard/components/FleetGrid';
-import { useProjects } from '@/modules/projects/hooks/useProjects';
 import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModal';
 import type { SessionStatus } from '@cloud-code/contracts/modules/session/domain';
 
@@ -56,23 +54,12 @@ const Metric = ({ label, value, icon: Icon, tone }: MetricProps) => (
 
 const Overview = () => {
     const { sessions, loading, error } = useFleet();
-    const { projects } = useProjects();
     const [filter, setFilter] = useState<FleetFilter>('all');
-    const [query, setQuery] = useState('');
 
-    const projectNames = useMemo(
-        () => new Map(projects.map((project) => [project.id, project.name])),
-        [projects]
+    const visible = useMemo(
+        () => sessions.filter((session) => matchesFilter(session.status, filter)),
+        [filter, sessions]
     );
-    const visible = useMemo(() => {
-        const needle = query.trim().toLowerCase();
-        return sessions.filter((session) => {
-            if(!matchesFilter(session.status, filter)) return false;
-            if(!needle) return true;
-            const project = projectNames.get(session.projectId) ?? '';
-            return `${session.title} ${session.cliType} ${project}`.toLowerCase().includes(needle);
-        });
-    }, [filter, projectNames, query, sessions]);
 
     const counts = useMemo(() => ({
         attention: sessions.filter((session) => session.status === 'waiting_input').length,
@@ -81,15 +68,12 @@ const Overview = () => {
         error: sessions.filter((session) => session.status === 'error').length
     }), [sessions]);
 
-    const clearFilters = () => {
-        setFilter('all');
-        setQuery('');
-    };
+    const clearFilters = () => setFilter('all');
 
     const metricValue = (value: number): number | string => loading && sessions.length === 0 ? '—' : value;
 
     return (
-        <AppShell title='Overview'>
+        <AppShell>
             <Canvas>
                 <Row max='max-w-6xl'>
                     <PageHeader
@@ -117,17 +101,7 @@ const Overview = () => {
                     </div>
                 </Row>
 
-                <Row max='max-w-6xl' className='flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between lg:px-6'>
-                    <div className='relative w-full lg:max-w-xs'>
-                        <Search className='pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted' aria-hidden='true' />
-                        <input
-                            value={query}
-                            onChange={(event) => setQuery(event.target.value)}
-                            aria-label='Search sessions or projects'
-                            placeholder='Search sessions or projects'
-                            className='h-9 w-full rounded-lg border border-hairline bg-surface pr-3 pl-9 text-xs text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent'
-                        />
-                    </div>
+                <Row max='max-w-6xl' className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-end'>
                     <div className='flex flex-wrap items-center gap-1' aria-label='Filter sessions'>
                         {FILTERS.map((item) => (
                             <button
@@ -156,11 +130,10 @@ const Overview = () => {
                     </Row>
                 )}
 
-                <Row grow max='max-w-6xl' className='p-5 sm:p-8'>
+                <Row grow max='max-w-6xl'>
                     <FleetGrid
                         sessions={visible}
-                        projectNames={projectNames}
-                        isFiltered={filter !== 'all' || query.trim().length > 0}
+                        isFiltered={filter !== 'all'}
                         loading={loading}
                         error={error}
                         onClearFilters={clearFilters}

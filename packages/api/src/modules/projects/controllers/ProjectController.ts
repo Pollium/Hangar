@@ -6,7 +6,11 @@ import { Body, NumericParam } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import ProjectService from '../services/ProjectService';
-import { CreateProjectInput, UpdateProjectInput } from '@cloud-code/contracts/modules/project/http';
+import {
+    AddProjectRepositoryInput,
+    CreateProjectInput,
+    UpdateProjectInput
+} from '@cloud-code/contracts/modules/project/http';
 import { projectRoutes } from '@cloud-code/contracts/modules/project/routes';
 
 @Middleware(AuthenticatedRoute)
@@ -37,5 +41,25 @@ export default class ProjectController extends BaseController{
     @Route(projectRoutes.remove)
     remove(@CurrentUser() userId: number, @NumericParam('id') id: number){
         return this.#service.remove(userId, id);
+    }
+
+    @Route(projectRoutes.rotateInvite)
+    rotateInvite(@CurrentUser() userId: number, @NumericParam('id') id: number){
+        return this.#service.rotateInvite(userId, id);
+    }
+
+    @Route(projectRoutes.listRepositories)
+    listRepositories(@CurrentUser() userId: number, @NumericParam('id') id: number){
+        return this.#service.listRepositories(userId, id);
+    }
+
+    @Route(projectRoutes.addRepository)
+    addRepository(@CurrentUser() userId: number, @NumericParam('id') id: number, @Body() body: AddProjectRepositoryInput){
+        return this.#service.addRepository(userId, id, body);
+    }
+
+    @Route(projectRoutes.removeRepository)
+    removeRepository(@CurrentUser() userId: number, @NumericParam('id') id: number, @NumericParam('repoId') repoId: number){
+        return this.#service.removeRepository(userId, id, repoId);
     }
 }

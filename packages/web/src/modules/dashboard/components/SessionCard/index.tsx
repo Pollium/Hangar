@@ -1,6 +1,6 @@
 import { useState, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, FolderGit2, LoaderCircle, Trash2 } from 'lucide-react';
+import { ArrowUpRight, LoaderCircle, Trash2 } from 'lucide-react';
 import { sessionApi } from '@/modules/sessions/api/api';
 import { SESSION_STATUS_LABEL, SESSION_STATUS_TEXT } from '@/shared/utils/sessionStatus';
 import type { Session } from '@cloud-code/contracts/modules/session/domain';
@@ -26,11 +26,10 @@ const timeAgo = (value: string | null, now: number): string => {
 
 interface Props{
     session: Session;
-    projectName?: string;
     now: number;
 }
 
-export const SessionCard = ({ session, projectName, now }: Props) => {
+export const SessionCard = ({ session, now }: Props) => {
     const [deleting, setDeleting] = useState(false);
 
     const remove = async (event: MouseEvent) => {
@@ -64,12 +63,9 @@ export const SessionCard = ({ session, projectName, now }: Props) => {
                     <ArrowUpRight className='size-3.5 shrink-0 text-muted/50 transition-colors group-hover:text-foreground' aria-hidden='true' />
                 </div>
                 <div className='mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-muted'>
-                    <FolderGit2 className='size-3 shrink-0' aria-hidden='true' />
-                    <span className='truncate'>{projectName ?? `Project #${session.projectId}`}</span>
-                    <span aria-hidden='true'>·</span>
                     <span>{CLI_LABEL[session.cliType] ?? session.cliType}</span>
                     <span aria-hidden='true'>·</span>
-                    <span className='font-mono'>#{session.id}</span>
+                    <span>#{session.id}</span>
                 </div>
             </div>
             <div className='flex shrink-0 flex-col items-end gap-1 text-right'>

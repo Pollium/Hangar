@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CircleAlert, LoaderCircle, Plus, Radar, RotateCcw } from 'lucide-react';
 import { SessionCard } from '@/modules/dashboard/components/SessionCard';
+import { EmptyState } from '@/shared/components/ui/EmptyState';
 import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModal';
 import type { Session, SessionStatus } from '@cloud-code/contracts/modules/session/domain';
 
@@ -47,14 +48,13 @@ const GROUPS: Array<{
 
 interface Props{
     sessions: Session[];
-    projectNames: Map<number, string>;
     isFiltered: boolean;
     loading: boolean;
     error: string | null;
     onClearFilters: () => void;
 }
 
-export const FleetGrid = ({ sessions, projectNames, isFiltered, loading, error, onClearFilters }: Props) => {
+export const FleetGrid = ({ sessions, isFiltered, loading, error, onClearFilters }: Props) => {
     const [now, setNow] = useState(() => Date.now());
 
     useEffect(() => {
@@ -97,19 +97,13 @@ export const FleetGrid = ({ sessions, projectNames, isFiltered, loading, error, 
 
     if(sessions.length === 0){
         return (
-            <div className='flex min-h-72 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-hairline bg-surface/40 px-6 text-center'>
-                <span className='grid size-11 place-items-center rounded-2xl bg-foreground/[0.05] text-muted' aria-hidden='true'>
-                    <Radar className='size-5' />
-                </span>
-                <div className='flex flex-col gap-1'>
-                    <h2 className='text-sm font-medium text-foreground'>{isFiltered ? 'No matching sessions' : 'Your fleet is empty'}</h2>
-                    <p className='max-w-sm text-xs leading-5 text-muted'>
-                        {isFiltered
-                            ? 'Try another search or clear the current filters.'
-                            : 'Start an agent session and it will appear here with live status updates.'}
-                    </p>
-                </div>
-                {isFiltered ? (
+            <EmptyState
+                icon={Radar}
+                title={isFiltered ? 'No matching sessions' : 'Your fleet is empty'}
+                description={isFiltered
+                    ? 'Try another search or clear the current filters.'
+                    : 'Start an agent session and it will appear here with live status updates.'}
+                action={isFiltered ? (
                     <button
                         type='button'
                         onClick={onClearFilters}
@@ -128,7 +122,7 @@ export const FleetGrid = ({ sessions, projectNames, isFiltered, loading, error, 
                         New session
                     </button>
                 )}
-            </div>
+            />
         );
     }
 
@@ -153,7 +147,6 @@ export const FleetGrid = ({ sessions, projectNames, isFiltered, loading, error, 
                                 <SessionCard
                                     key={session.id}
                                     session={session}
-                                    projectName={projectNames.get(session.projectId)}
                                     now={now}
                                 />
                             ))}

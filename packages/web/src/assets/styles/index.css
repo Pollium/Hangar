@@ -2,7 +2,6 @@
 
 @theme {
     --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
-    --font-mono: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
 
     /* Expose palette tokens as Tailwind color utilities (bg-accent, text-danger, …). */
     --color-accent: var(--accent);
@@ -72,7 +71,6 @@ body {
 }
 
 @utility mono-label {
-    font-family: var(--font-mono);
     font-size: 0.6875rem;
     font-weight: 500;
     letter-spacing: 0.06em;

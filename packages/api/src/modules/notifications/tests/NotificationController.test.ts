@@ -12,7 +12,7 @@ describe('Notifications', () => {
     it('creates a notification from a session.needs_input event', async () => {
         const user = await userSeed.user();
 
-        eventBus.emit('session.needs_input', { sessionId: 1, ownerId: user.id, title: 'Fix bug' });
+        eventBus.emit('session.needs_input', { sessionId: 1, ownerId: user.id, projectId: 1, title: 'Fix bug' });
         await flushEvents();
 
         const res = await request(ctx.app, notificationRoutes.list, { as: user.id });

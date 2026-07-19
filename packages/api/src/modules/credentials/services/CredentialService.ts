@@ -35,7 +35,9 @@ export default class CredentialService{
     /**
      * Internal only — never exposed over HTTP. Decrypts the owner's variables into
      * `KEY=value` entries for injection into a sandbox process. When `names` is given,
-     * only matching variables are resolved.
+     * only matching variables are resolved. Credentials are intentionally per-user, not
+     * shared at the project level: a session always runs with its creator's own keys
+     * (`Session.ownerId`), even when other project members can view or restart it.
      */
     async resolveEnvFor(userId: number, names?: string[]): Promise<string[]>{
         const credentials = await Credential.findBy({ ownerId: userId });

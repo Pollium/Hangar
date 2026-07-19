@@ -152,7 +152,7 @@ export const SessionSearch = ({ sessions, loading }: Props) => {
                         >
                             <StatusDot status={session.status} />
                             <span className='min-w-0 flex-1 truncate text-[13px] text-foreground'>{session.title}</span>
-                            <span className='shrink-0 font-mono text-[10px] text-muted'>{session.cliType}</span>
+                            <span className='shrink-0 text-[10px] text-muted'>{session.cliType}</span>
                         </button>
                     ))}
                 </div>

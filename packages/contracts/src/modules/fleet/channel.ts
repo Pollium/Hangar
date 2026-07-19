@@ -1,5 +1,10 @@
 import type { Session } from '../session/domain';
 
+// Inbound (browser → server)
+export interface FleetSelectPayload{
+    projectId: number;
+}
+
 export interface FleetSnapshotData{
     sessions: Session[];
     revision: number;

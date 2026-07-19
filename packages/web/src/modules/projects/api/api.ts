@@ -1,15 +1,37 @@
+import { invalidateCache } from 'alova';
+import { alova } from '@/app/alova';
 import { call } from '@/shared/api/call';
 import { projectRoutes } from '@cloud-code/contracts/modules/project/routes';
 import { sandboxRoutes } from '@cloud-code/contracts/modules/sandbox/routes';
 import { cliRoutes } from '@cloud-code/contracts/modules/cli/routes';
-import type { CreateProjectInput, UpdateProjectInput } from '@cloud-code/contracts/modules/project/http';
+import type { AddProjectRepositoryInput, CreateProjectInput, UpdateProjectInput } from '@cloud-code/contracts/modules/project/http';
+
+// The default 30s GET cache would otherwise serve a stale, pre-membership-change project list
+// to the next refresh() right after creating/joining/leaving a project.
+const invalidateProjectsList = () => invalidateCache(alova.Get(projectRoutes.list.path));
 
 export const projectApi = {
     list: () => call(projectRoutes.list),
     get: (id: number) => call(projectRoutes.get, { path: { id } }),
-    create: (body: CreateProjectInput) => call(projectRoutes.create, { body }),
+    create: async (body: CreateProjectInput) => {
+        const project = await call(projectRoutes.create, { body });
+        invalidateProjectsList();
+        return project;
+    },
     update: (id: number, body: UpdateProjectInput) => call(projectRoutes.update, { path: { id }, body }),
-    remove: (id: number) => call(projectRoutes.remove, { path: { id } })
+    remove: async (id: number) => {
+        await call(projectRoutes.remove, { path: { id } });
+        invalidateProjectsList();
+    },
+    rotateInvite: (id: number) => call(projectRoutes.rotateInvite, { path: { id } }),
+    joinInvite: async (token: string) => {
+        const project = await call(projectRoutes.joinInvite, { path: { token } });
+        invalidateProjectsList();
+        return project;
+    },
+    listRepositories: (id: number) => call(projectRoutes.listRepositories, { path: { id } }),
+    addRepository: (id: number, body: AddProjectRepositoryInput) => call(projectRoutes.addRepository, { path: { id }, body }),
+    removeRepository: (id: number, repoId: number) => call(projectRoutes.removeRepository, { path: { id, repoId } })
 };
 
 export const sandboxApi = {

@@ -87,6 +87,7 @@ export default class HealthMonitorQueue extends BaseQueue<Record<string, never>>
                 eventBus.emit('session.status_changed', {
                     sessionId: session.id,
                     ownerId: session.ownerId,
+                    projectId: session.projectId,
                     status: 'error'
                 });
                 logger.debug('session tmux down', { scope: 'health-monitor', sessionId: session.id });

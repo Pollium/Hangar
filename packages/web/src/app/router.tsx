@@ -5,6 +5,7 @@ import { lazyElement } from '@/app/lazyElement';
 import type { DiscoveredRoute, RouteTier } from '@/shared/contracts/routing/route';
 import GuestGuard from '@/shared/components/routing/GuestGuard';
 import ProtectedGuard from '@/shared/components/routing/ProtectedGuard';
+import OnboardingGuard from '@/shared/components/routing/OnboardingGuard';
 import AdminGuard from '@/shared/components/routing/AdminGuard';
 import RouteErrorBoundary from '@/shared/components/routing/RouteErrorBoundary';
 import NotFound from '@/shared/components/routing/NotFound';
@@ -28,7 +29,12 @@ if(guest.length) children.push({ element: <GuestGuard />, children: guest });
 const protectedChildren = toRoutes(byTier('protected'));
 const admin = toRoutes(byTier('admin'));
 if(admin.length) protectedChildren.push({ element: <AdminGuard />, children: admin });
-if(protectedChildren.length) children.push({ element: <ProtectedGuard />, children: protectedChildren });
+if(protectedChildren.length){
+    children.push({
+        element: <ProtectedGuard />,
+        children: [{ element: <OnboardingGuard />, children: protectedChildren }]
+    });
+}
 
 children.push({ path: '*', element: <NotFound /> });
 

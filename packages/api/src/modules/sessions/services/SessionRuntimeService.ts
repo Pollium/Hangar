@@ -118,6 +118,7 @@ export default class SessionRuntimeService{
             eventBus.emit('session.status_changed', {
                 sessionId: saved.id,
                 ownerId: saved.ownerId,
+                projectId: saved.projectId,
                 status: 'stopped'
             });
 
@@ -137,6 +138,7 @@ export default class SessionRuntimeService{
             eventBus.emit('session.status_changed', {
                 sessionId: saved.id,
                 ownerId: saved.ownerId,
+                projectId: saved.projectId,
                 status: 'stopped'
             });
             return saved;
@@ -149,8 +151,9 @@ export default class SessionRuntimeService{
             await this.#kill(current);
             await this.#afterTermination(onTerminated, current.id);
             const ownerId = current.ownerId;
+            const projectId = current.projectId;
             await current.remove();
-            eventBus.emit('session.removed', { sessionId: session.id, ownerId });
+            eventBus.emit('session.removed', { sessionId: session.id, ownerId, projectId });
         });
     }
 
@@ -199,6 +202,7 @@ export default class SessionRuntimeService{
                 eventBus.emit('session.status_changed', {
                     sessionId: saved.id,
                     ownerId: saved.ownerId,
+                    projectId: saved.projectId,
                     status: 'running'
                 });
             }
@@ -215,6 +219,7 @@ export default class SessionRuntimeService{
                     eventBus.emit('session.status_changed', {
                         sessionId: saved.id,
                         ownerId: saved.ownerId,
+                        projectId: saved.projectId,
                         status: 'error'
                     });
                 }catch(persistError){

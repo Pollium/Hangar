@@ -1,19 +1,11 @@
 import { useTerminal } from '@/modules/sessions/hooks/useTerminal';
 
 export const TerminalView = ({ sessionId }: { sessionId: number }) => {
-    const { containerRef, connection, agentStatus, dimensions, error, retry } = useTerminal(sessionId);
+    const { containerRef, agentStatus, error, retry } = useTerminal(sessionId);
     const failed = Boolean(error) || agentStatus === 'error';
 
     return (
         <div className='flex h-full w-full min-w-0 flex-col'>
-            <div className='flex h-9 shrink-0 items-center justify-between border-b border-hairline px-4'>
-                <span className='mono-label text-muted'>
-                    session #{sessionId}
-                    {agentStatus ? ` · ${agentStatus.replace('_', ' ')}` : ''}
-                    {dimensions.cols > 0 ? ` · ${dimensions.cols}×${dimensions.rows}` : ''}
-                </span>
-                {connection !== 'open' && <span className='mono-label text-foreground'>reconnecting</span>}
-            </div>
             {failed && (
                 <div role='alert' className='flex shrink-0 items-center justify-between gap-4 border-b border-danger/30 bg-danger/10 px-4 py-2 text-xs text-foreground'>
                     <span className='truncate'>{error ? `Session failed: ${error}` : 'The CLI process exited unexpectedly.'}</span>

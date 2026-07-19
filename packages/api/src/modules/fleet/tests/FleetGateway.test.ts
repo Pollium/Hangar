@@ -4,6 +4,7 @@ import { userSeed } from '@/modules/user/tests/UserSeed';
 import { projectSeed } from '@/modules/projects/tests/ProjectSeed';
 import { eventBus } from '@/shared/events/EventBus';
 import SessionService from '@/modules/sessions/services/SessionService';
+import ProjectService from '@/modules/projects/services/ProjectService';
 import FleetGateway from '../gateways/FleetGateway';
 import type FleetService from '../services/FleetService';
 import type { GatewaySocket } from '@/shared/contracts/gateway';
@@ -25,7 +26,7 @@ describe('FleetGateway', () => {
         const gateway = new FleetGateway();
         const sessions = new SessionService();
 
-        await gateway.connect(owner.id, socket);
+        await gateway.select(owner.id, { projectId: project.id }, socket);
         expect(framesFrom(send)[0]).toEqual({
             type: 'fleet.snapshot',
             data: { sessions: [], revision: 1 }
@@ -65,11 +66,30 @@ describe('FleetGateway', () => {
 
         expect(framesFrom(send).map((frame) => frame.data.revision)).toEqual([1, 2, 3, 4]);
     });
+
+    it('lets a second project member see the same live sessions', async () => {
+        const owner = await userSeed.user();
+        const collaborator = await userSeed.user();
+        const project = await projectSeed.project(owner);
+        const sessions = new SessionService();
+        await sessions.create(owner.id, { projectId: project.id, cliType: 'opencode', title: 'Shared' });
+
+        const joined = await new ProjectService().joinByInvite(collaborator.id, project.inviteToken);
+        expect(joined.id).toBe(project.id);
+
+        const send = vi.fn();
+        const socket = { send } as unknown as GatewaySocket;
+        const gateway = new FleetGateway();
+        await gateway.select(collaborator.id, { projectId: project.id }, socket);
+
+        const snapshot = framesFrom(send)[0];
+        expect(snapshot.type).toBe('fleet.snapshot');
+        if(snapshot.type === 'fleet.snapshot') expect(snapshot.data.sessions).toHaveLength(1);
+    });
 });
 
-
 describe('FleetGateway ordering', () => {
-    it('buffers a status delta behind the in-flight snapshot for that owner', async () => {
+    it('buffers a status delta behind the in-flight snapshot for that project', async () => {
         let resolveSnapshot!: (sessions: ContractSession[]) => void;
         const snapshot = new Promise<ContractSession[]>((resolve) => { resolveSnapshot = resolve; });
         const liveSession: ContractSession = {
@@ -94,11 +114,12 @@ describe('FleetGateway ordering', () => {
         const gateway = new FleetGateway(fleet);
         const socket = { send } as unknown as GatewaySocket;
 
-        const connecting = gateway.connect(liveSession.ownerId, socket);
+        const connecting = gateway.select(liveSession.ownerId, { projectId: liveSession.projectId }, socket);
         await vi.waitFor(() => expect(fleet.snapshot).toHaveBeenCalledTimes(1));
         eventBus.emit('session.status_changed', {
             sessionId: liveSession.id,
             ownerId: liveSession.ownerId,
+            projectId: liveSession.projectId,
             status: 'running'
         });
         resolveSnapshot([]);

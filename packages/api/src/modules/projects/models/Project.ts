@@ -11,8 +11,8 @@ export default class Project extends BaseModel implements ProjectProfile{
     @Column('text')
     description!: string;
 
-    @Column({ type: 'varchar', nullable: true })
-    repoUrl!: string | null;
+    @Column({ type: 'varchar', unique: true })
+    inviteToken!: string;
 
     @Column('varchar')
     baseImage!: string;

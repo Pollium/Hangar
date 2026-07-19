@@ -4,7 +4,8 @@ export const ProjectErrors = {
     domain: 'Project',
     causes: {
         NotFound: 404,
-        Forbidden: 403
+        Forbidden: 403,
+        InvalidInvite: 404
     }
 } as const satisfies ErrorTable;
 

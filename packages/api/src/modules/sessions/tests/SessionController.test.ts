@@ -4,6 +4,7 @@ import { useApp } from '@tests/harness';
 import { request, expectError } from '@tests/request';
 import { userSeed } from '@/modules/user/tests/UserSeed';
 import { projectSeed } from '@/modules/projects/tests/ProjectSeed';
+import ProjectService from '@/modules/projects/services/ProjectService';
 
 describe('SessionController', () => {
     const ctx = useApp();
@@ -47,17 +48,31 @@ describe('SessionController', () => {
         expectError(res, 403, 'Project::Forbidden');
     });
 
-    it('lists sessions filtered by project', async () => {
+    it('lists sessions scoped to one project at a time', async () => {
         const user = await userSeed.user();
         const [a, b] = [await projectSeed.project(user), await projectSeed.project(user)];
         await request(ctx.app, sessionRoutes.create, { as: user.id, body: { projectId: a.id, cliType: 'codex' } });
         await request(ctx.app, sessionRoutes.create, { as: user.id, body: { projectId: b.id, cliType: 'codex' } });
 
-        const all = await request(ctx.app, sessionRoutes.list, { as: user.id });
-        expect(all.data()).toHaveLength(2);
+        const scopedToA = await request(ctx.app, sessionRoutes.list, { as: user.id, query: { projectId: a.id } });
+        expect(scopedToA.data()).toHaveLength(1);
 
-        const scoped = await request(ctx.app, sessionRoutes.list, { as: user.id, query: { projectId: a.id } });
-        expect(scoped.data()).toHaveLength(1);
+        const scopedToB = await request(ctx.app, sessionRoutes.list, { as: user.id, query: { projectId: b.id } });
+        expect(scopedToB.data()).toHaveLength(1);
+    });
+
+    it('shows every project member the same session list, not just its creator', async () => {
+        const [owner, collaborator] = [await userSeed.user(), await userSeed.user()];
+        const project = await projectSeed.project(owner);
+        await request(ctx.app, sessionRoutes.create, { as: owner.id, body: { projectId: project.id, cliType: 'codex' } });
+
+        const forbidden = await request(ctx.app, sessionRoutes.list, { as: collaborator.id, query: { projectId: project.id } });
+        expectError(forbidden, 403, 'Project::Forbidden');
+
+        await new ProjectService().joinByInvite(collaborator.id, project.inviteToken);
+
+        const asCollaborator = await request(ctx.app, sessionRoutes.list, { as: collaborator.id, query: { projectId: project.id } });
+        expect(asCollaborator.data()).toHaveLength(1);
     });
 
     it('stops and removes a session', async () => {

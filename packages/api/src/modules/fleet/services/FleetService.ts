@@ -20,8 +20,8 @@ const serialize = (entity: SessionEntity): Session => ({
 export default class FleetService{
     #sessions = new SessionService();
 
-    async snapshot(userId: number): Promise<Session[]>{
-        return (await this.#sessions.list(userId)).map(serialize);
+    async snapshot(userId: number, projectId: number): Promise<Session[]>{
+        return (await this.#sessions.list(userId, projectId)).map(serialize);
     }
 
     async session(userId: number, sessionId: number): Promise<Session>{

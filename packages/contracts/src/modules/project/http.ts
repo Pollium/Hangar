@@ -6,8 +6,10 @@ export interface CreateProjectInput{
     name: string;
     /** @maxLength 500 */
     description: string;
-    /** @maxLength 500 */
-    repoUrl?: string;
+    /**
+     * @maxItems 10
+     */
+    repoUrls?: string[];
     /** @maxLength 200 */
     baseImage?: string;
     /**
@@ -25,8 +27,6 @@ export interface UpdateProjectInput{
     name?: string;
     /** @maxLength 500 */
     description?: string;
-    /** @maxLength 500 */
-    repoUrl?: string | null;
     /** @maxLength 200 */
     baseImage?: string;
     /**
@@ -34,4 +34,9 @@ export interface UpdateProjectInput{
      * @maxLength 40
      */
     defaultCli?: string;
+}
+
+export interface AddProjectRepositoryInput{
+    /** @maxLength 500 */
+    url: string;
 }

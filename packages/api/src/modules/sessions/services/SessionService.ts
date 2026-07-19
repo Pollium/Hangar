@@ -32,14 +32,16 @@ export default class SessionService{
         eventBus.emit('session.status_changed', {
             sessionId: saved.id,
             ownerId: saved.ownerId,
+            projectId: saved.projectId,
             status: 'starting'
         });
         return saved;
     }
 
-    list(userId: number, projectId?: number): Promise<Session[]>{
+    async list(userId: number, projectId: number): Promise<Session[]>{
+        await this.#projects.get(userId, projectId);
         return Session.find({
-            where: projectId ? { ownerId: userId, projectId } : { ownerId: userId },
+            where: { projectId },
             order: { lastActiveAt: 'DESC' }
         });
     }
@@ -47,7 +49,7 @@ export default class SessionService{
     async get(userId: number, sessionId: number): Promise<Session>{
         const session = await Session.findOneBy({ id: sessionId });
         if(!session) throw SessionError.NotFound();
-        if(session.ownerId !== userId) throw SessionError.Forbidden();
+        if(!(await this.#projects.isMember(userId, session.projectId))) throw SessionError.Forbidden();
         return session;
     }
 

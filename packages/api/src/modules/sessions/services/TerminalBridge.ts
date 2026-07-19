@@ -243,6 +243,7 @@ export default class TerminalBridge{
             eventBus.emit('session.status_changed', {
                 sessionId: session.id,
                 ownerId: session.ownerId,
+                projectId: session.projectId,
                 status: 'error'
             });
         }

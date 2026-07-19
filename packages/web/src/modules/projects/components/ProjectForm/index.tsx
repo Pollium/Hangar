@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { ListBox, ListBoxItem, Select } from '@heroui/react';
 import { projectApi, cliApi } from '@/modules/projects/api/api';
 import type { CliDescriptor } from '@cloud-code/contracts/modules/cli/domain';
+import type { Project } from '@cloud-code/contracts/modules/project/domain';
 
 const input = 'rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent placeholder:text-muted';
 const selectTrigger = 'flex h-[38px] items-center justify-between gap-2 rounded-md border border-hairline bg-surface px-3 text-sm text-foreground outline-none transition-colors focus:border-accent data-[open]:border-accent';
 
-export const ProjectForm = ({ onCreated }: { onCreated: () => void }) => {
+export const ProjectForm = ({ onCreated }: { onCreated: (project: Project) => void }) => {
     const [name, setName] = useState('');
-    const [repoUrl, setRepoUrl] = useState('');
+    const [repoUrls, setRepoUrls] = useState('');
     const [defaultCli, setDefaultCli] = useState('claude-code');
     const [clis, setClis] = useState<CliDescriptor[]>([]);
     const [busy, setBusy] = useState(false);
@@ -21,10 +22,11 @@ export const ProjectForm = ({ onCreated }: { onCreated: () => void }) => {
         if(!name.trim()) return;
         setBusy(true);
         try{
-            await projectApi.create({ name: name.trim(), description: '', repoUrl: repoUrl.trim() || undefined, defaultCli });
+            const urls = repoUrls.split('\n').map((url) => url.trim()).filter(Boolean);
+            const project = await projectApi.create({ name: name.trim(), description: '', repoUrls: urls, defaultCli });
             setName('');
-            setRepoUrl('');
-            onCreated();
+            setRepoUrls('');
+            onCreated(project);
         }finally{
             setBusy(false);
         }
@@ -48,7 +50,12 @@ export const ProjectForm = ({ onCreated }: { onCreated: () => void }) => {
                     </Select.Popover>
                 </Select.Root>
             </div>
-            <input className={input} value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} placeholder='Git repo URL (optional)' />
+            <textarea
+                className={`${input} min-h-16 resize-y`}
+                value={repoUrls}
+                onChange={(e) => setRepoUrls(e.target.value)}
+                placeholder='Git repo URLs (optional, one per line)'
+            />
             <button
                 type='button'
                 onClick={submit}

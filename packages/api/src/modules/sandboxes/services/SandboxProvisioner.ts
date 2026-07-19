@@ -1,6 +1,7 @@
 import { config } from '@/shared/config';
 import { logger } from '@/core/utils/Logger';
 import DockerService from '@/shared/services/docker/DockerService';
+import ProjectRepository from '@/modules/projects/models/ProjectRepository';
 import type ContainerHandle from '@/shared/services/docker/ContainerHandle';
 import type Project from '@/modules/projects/models/Project';
 import type Sandbox from '../models/Sandbox';
@@ -46,7 +47,7 @@ export default class SandboxProvisioner{
             const mountedVolume = await owned.volumeAt('/workspace');
             if(mountedVolume === sandbox.volumeName){
                 if(!(await owned.isRunning())) await owned.start();
-                await this.#cloneRepo(owned, project);
+                await this.#cloneRepositories(owned, project);
                 return owned;
             }
 
@@ -76,7 +77,7 @@ export default class SandboxProvisioner{
             });
 
             await created.start();
-            await this.#cloneRepo(created, project);
+            await this.#cloneRepositories(created, project);
             return created;
         }catch(error){
             // Never leave a newly-created name reserved when start/provisioning fails. Keep the
@@ -96,15 +97,34 @@ export default class SandboxProvisioner{
         }
     }
 
-    async #cloneRepo(handle: ContainerHandle, project: Project): Promise<void>{
-        if(!project.repoUrl) return;
-        try{
-            // Clone into /workspace only when empty. Session environment variables are not
-            // available at provisioning time and are never persisted into the volume.
-            const script = `test -z "$(ls -A /workspace 2>/dev/null)" && git clone ${project.repoUrl} /workspace || true`;
-            await handle.exec(['bash', '-lc', script], { cwd: '/workspace' });
-        }catch(error){
-            logger.error('sandbox repo clone failed', error, { scope: 'sandbox.clone', projectId: project.id });
+    /**
+     * Clones every attached repo into its own /workspace subdirectory, skipping any that
+     * already exist. Runs `git` as a plain argv command (no shell) so a repo URL can never
+     * be interpreted as shell syntax. Session environment variables are not available at
+     * provisioning time and are never persisted into the volume.
+     */
+    async #cloneRepositories(handle: ContainerHandle, project: Project): Promise<void>{
+        const repos = await ProjectRepository.findBy({ projectId: project.id });
+        for(const repo of repos){
+            const dest = `/workspace/${this.#repoSlug(repo.url)}`;
+            try{
+                const existing = await handle.exec(['test', '-e', dest]);
+                if(existing.exitCode === 0) continue;
+                await handle.exec(['git', 'clone', repo.url, dest], { cwd: '/workspace' });
+            }catch(error){
+                logger.error('sandbox repo clone failed', error, {
+                    scope: 'sandbox.clone',
+                    projectId: project.id,
+                    repositoryId: repo.id
+                });
+            }
         }
+    }
+
+    #repoSlug(url: string): string{
+        const trimmed = url.replace(/\.git$/i, '').replace(/\/+$/, '');
+        const last = trimmed.split('/').pop() || '';
+        const safe = last.replace(/[^a-zA-Z0-9._-]/g, '-');
+        return safe && safe !== '.' && safe !== '..' ? safe : 'repo';
     }
 }

@@ -13,9 +13,9 @@ const SettingsPage = () => {
     const [open, setOpen] = useState(false);
 
     return (
-        <AppShell title='Settings'>
+        <AppShell>
             <Canvas>
-                <Row className='px-8 pt-12 pb-10'>
+                <Row>
                     <PageHeader
                         title='Environment variables'
                         description='Add any name and value needed by your agents. Values are encrypted at rest, injected when a new agent session starts, and never shown again after saving.'
@@ -31,7 +31,7 @@ const SettingsPage = () => {
                         )}
                     />
                 </Row>
-                <Row grow className='p-8'>
+                <Row grow>
                     <CredentialList credentials={credentials} onChanged={refresh} />
                 </Row>
             </Canvas>

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LoaderCircle, Trash2 } from 'lucide-react';
 import { sessionApi } from '@/modules/sessions/api/api';
-import { useSessionsStore } from '@/modules/sessions/store/sessions';
 import { SESSION_STATUS_LABEL, SESSION_STATUS_TEXT } from '@/shared/utils/sessionStatus';
 import type { Session } from '@cloud-code/contracts/modules/session/domain';
 
@@ -13,7 +12,6 @@ interface Props{
 
 export const SessionItem = ({ session, active }: Props) => {
     const navigate = useNavigate();
-    const removeFromStore = useSessionsStore((state) => state.remove);
     const [deleting, setDeleting] = useState(false);
 
     const remove = async () => {
@@ -25,7 +23,7 @@ export const SessionItem = ({ session, active }: Props) => {
         setDeleting(true);
         try{
             await sessionApi.remove(session.id);
-            removeFromStore(session.id);
+            // No local removal: the fleet.remove realtime event updates the shared list.
             if(active) navigate('/');
         }catch{
             window.alert('The session could not be deleted. Please try again.');
@@ -46,7 +44,7 @@ export const SessionItem = ({ session, active }: Props) => {
                     } ${SESSION_STATUS_TEXT[session.status]}`}>
                         {session.title}
                     </span>
-                    <span className='truncate font-mono text-[11px] text-muted/70'>{session.cliType}</span>
+                    <span className='truncate text-[11px] text-muted/70'>{session.cliType}</span>
                 </span>
             </Link>
             <button

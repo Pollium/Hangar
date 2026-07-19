@@ -119,7 +119,11 @@ export default class SessionStatusService{
         }
         tracked.emit({ type: 'terminal.status', data: { status } });
 
-        const base = { sessionId: tracked.session.id, ownerId: tracked.session.ownerId };
+        const base = {
+            sessionId: tracked.session.id,
+            ownerId: tracked.session.ownerId,
+            projectId: tracked.session.projectId
+        };
         eventBus.emit('session.status_changed', { ...base, status });
         if(status === 'waiting_input') eventBus.emit('session.needs_input', { ...base, title: tracked.session.title });
         if(status === 'idle') eventBus.emit('session.idle', { ...base, title: tracked.session.title });

@@ -2,7 +2,7 @@ import BaseController from '@/shared/controllers/BaseController';
 import { Route } from '@/shared/controllers/Route';
 import { Status } from '@/shared/controllers/Status';
 import { Middleware } from '@/shared/middlewares/Middleware';
-import { Body, NumericParam, Query } from '@/shared/controllers/RequestParams';
+import { Body, NumericParam, NumericQuery } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import SessionService from '../services/SessionService';
@@ -14,8 +14,8 @@ export default class SessionController extends BaseController{
     #service = new SessionService();
 
     @Route(sessionRoutes.list)
-    list(@CurrentUser() userId: number, @Query('projectId') projectId?: string){
-        return this.#service.list(userId, projectId ? Number(projectId) : undefined);
+    list(@CurrentUser() userId: number, @NumericQuery('projectId') projectId: number){
+        return this.#service.list(userId, projectId);
     }
 
     @Route(sessionRoutes.create)

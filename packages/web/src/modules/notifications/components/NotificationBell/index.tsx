@@ -18,7 +18,7 @@ export const NotificationBell = () => {
             <button
                 type='button'
                 onClick={toggle}
-                className='relative grid size-8 place-items-center rounded-lg border border-hairline text-muted transition-colors hover:bg-foreground/5 hover:text-foreground'
+                className='relative grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-foreground/5 hover:text-foreground'
                 aria-label='Notifications'
             >
                 <Bell className='size-4' />

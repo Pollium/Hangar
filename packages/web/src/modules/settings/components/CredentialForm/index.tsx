@@ -35,7 +35,7 @@ export const CredentialForm = ({ onCreated }: { onCreated: () => void }) => {
                 <label className='flex flex-col gap-1.5'>
                     <span className='text-xs font-medium text-muted'>Name</span>
                     <input
-                        className={`${input} font-mono`}
+                        className={input}
                         value={name}
                         onChange={(event) => setName(event.target.value)}
                         placeholder='EXAMPLE_API_KEY'
