@@ -41,12 +41,12 @@ export default abstract class BaseGateway{
 
     #onConnection(socket: GatewaySocket, req: FastifyRequest): void{
         this.connections.add(socket);
-        for(const handlerName of this.#connectHandlers) void this.#runLifecycle(handlerName, socket, req);
+        for(const handlerName of this.#connectHandlers) void this.#runLifecycle(handlerName, socket, req, true);
 
         socket.on('message', (raw: Buffer) => void this.#dispatch(socket, req, raw.toString()));
         socket.on('close', () => {
             this.connections.remove(socket);
-            for(const handlerName of this.#disconnectHandlers) void this.#runLifecycle(handlerName, socket, req);
+            for(const handlerName of this.#disconnectHandlers) void this.#runLifecycle(handlerName, socket, req, false);
         });
     }
 
@@ -82,11 +82,20 @@ export default abstract class BaseGateway{
         }
     }
 
-    async #runLifecycle(handlerName: string | symbol, socket: GatewaySocket, req: FastifyRequest): Promise<void>{
+    async #runLifecycle(
+        handlerName: string | symbol,
+        socket: GatewaySocket,
+        req: FastifyRequest,
+        closeOnError: boolean
+    ): Promise<void>{
         try{
             await this.#invoke(handlerName, socket, req, undefined);
         }catch(error){
-            this.#handleError(socket, error);
+            try{
+                this.#handleError(socket, error);
+            }finally{
+                if(closeOnError) socket.close(1011, 'Gateway initialization failed');
+            }
         }
     }
 

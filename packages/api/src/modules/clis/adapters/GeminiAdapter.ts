@@ -5,7 +5,7 @@ const GeminiAdapter: CliAdapter = {
     label: 'Gemini CLI',
     requiredCredentials: ['GEMINI_API_KEY'],
 
-    installCommand: () => ['bash', '-lc', 'command -v gemini >/dev/null 2>&1 || npm i -g @google/gemini-cli'],
+    installCommand: () => ['bash', '-lc', 'command -v gemini >/dev/null 2>&1 || npm i -g @google/gemini-cli@0.51.0'],
     startCommand: ({ cwd }) => ['bash', '-lc', `cd ${cwd} && gemini`],
 
     detectStatus: (out) => {

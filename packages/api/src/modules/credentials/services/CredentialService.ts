@@ -1,24 +1,28 @@
 import SecretCipher from '@/shared/services/SecretCipher';
 import Credential from '../models/Credential';
 import { CredentialError } from '../contracts/domain/errors';
+import type { CredentialView } from '@cloud-code/contracts/modules/credential/domain';
 import type { CreateCredentialInput } from '@cloud-code/contracts/modules/credential/http';
 
 export default class CredentialService{
     #cipher = new SecretCipher();
 
-    create(userId: number, input: CreateCredentialInput): Promise<Credential>{
-        const entity = Credential.create({
+    async create(userId: number, input: CreateCredentialInput): Promise<CredentialView>{
+        // Keep the proven encrypted storage schema for backward compatibility. The public API
+        // intentionally exposes only name/value; legacy provider/label columns are internal.
+        const credential = await Credential.create({
             ownerId: userId,
-            provider: input.provider,
-            label: input.label,
-            envVar: input.envVar,
-            ciphertext: this.#cipher.encrypt(input.secret)
-        });
-        return entity.save() as Promise<Credential>;
+            provider: 'custom',
+            label: input.name,
+            envVar: input.name,
+            ciphertext: this.#cipher.encrypt(input.value)
+        }).save();
+        return this.#view(credential);
     }
 
-    list(userId: number): Promise<Credential[]>{
-        return Credential.findBy({ ownerId: userId });
+    async list(userId: number): Promise<CredentialView[]>{
+        const credentials = await Credential.findBy({ ownerId: userId });
+        return credentials.map((credential) => this.#view(credential));
     }
 
     async remove(userId: number, id: number): Promise<void>{
@@ -29,16 +33,25 @@ export default class CredentialService{
     }
 
     /**
-     * Internal only — never exposed over HTTP. Decrypts the owner's credentials into
-     * `KEY=value` env entries for injection into a sandbox process. When `envVars` is given,
-     * only matching credentials are resolved (what a specific CLI adapter requires).
+     * Internal only — never exposed over HTTP. Decrypts the owner's variables into
+     * `KEY=value` entries for injection into a sandbox process. When `names` is given,
+     * only matching variables are resolved.
      */
-    async resolveEnvFor(userId: number, envVars?: string[]): Promise<string[]>{
+    async resolveEnvFor(userId: number, names?: string[]): Promise<string[]>{
         const credentials = await Credential.findBy({ ownerId: userId });
-        const wanted = envVars ? new Set(envVars) : null;
+        const wanted = names ? new Set(names) : null;
 
         return credentials
             .filter((credential) => !wanted || wanted.has(credential.envVar))
             .map((credential) => `${credential.envVar}=${this.#cipher.decrypt(credential.ciphertext)}`);
+    }
+
+    #view(credential: Credential): CredentialView{
+        return {
+            id: credential.id,
+            createdAt: credential.createdAt.toISOString(),
+            updatedAt: credential.updatedAt.toISOString(),
+            name: credential.envVar
+        };
     }
 }

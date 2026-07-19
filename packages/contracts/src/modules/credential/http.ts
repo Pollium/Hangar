@@ -1,20 +1,12 @@
 export interface CreateCredentialInput{
     /**
-     * @minLength 1
-     * @maxLength 40
-     */
-    provider: string;
-    /**
+     * Environment variable name. Names are case-sensitive and must be valid for a process
+     * environment (letters/underscore first, then letters, numbers or underscores).
      * @minLength 1
      * @maxLength 80
+     * @pattern ^[A-Za-z_][A-Za-z0-9_]*$
      */
-    label: string;
-    /**
-     * @minLength 1
-     * @maxLength 80
-     * @pattern ^[A-Z][A-Z0-9_]*$
-     */
-    envVar: string;
+    name: string;
     /** @minLength 1 */
-    secret: string;
+    value: string;
 }

@@ -1,18 +1,29 @@
 import { useTerminal } from '@/modules/sessions/hooks/useTerminal';
 
 export const TerminalView = ({ sessionId }: { sessionId: number }) => {
-    const { containerRef, connection, agentStatus } = useTerminal(sessionId);
+    const { containerRef, connection, agentStatus, dimensions, error, retry } = useTerminal(sessionId);
+    const failed = Boolean(error) || agentStatus === 'error';
 
     return (
-        <div className='flex h-full flex-col'>
+        <div className='flex h-full w-full min-w-0 flex-col'>
             <div className='flex h-9 shrink-0 items-center justify-between border-b border-hairline px-4'>
-                <span className='mono-label text-muted/70'>
-                    session #{sessionId}{agentStatus ? ` · ${agentStatus.replace('_', ' ')}` : ''}
+                <span className='mono-label text-muted'>
+                    session #{sessionId}
+                    {agentStatus ? ` · ${agentStatus.replace('_', ' ')}` : ''}
+                    {dimensions.cols > 0 ? ` · ${dimensions.cols}×${dimensions.rows}` : ''}
                 </span>
-                {connection !== 'open' && <span className='mono-label text-warning'>reconnecting</span>}
+                {connection !== 'open' && <span className='mono-label text-foreground'>reconnecting</span>}
             </div>
-            <div className='min-h-0 flex-1 bg-[#0d0d10] p-2'>
-                <div ref={containerRef} className='h-full w-full' />
+            {failed && (
+                <div role='alert' className='flex shrink-0 items-center justify-between gap-4 border-b border-danger/30 bg-danger/10 px-4 py-2 text-xs text-foreground'>
+                    <span className='truncate'>{error ? `Session failed: ${error}` : 'The CLI process exited unexpectedly.'}</span>
+                    <button type='button' onClick={retry} className='shrink-0 rounded border border-danger/40 px-2 py-1 font-medium hover:bg-danger/10'>
+                        Retry
+                    </button>
+                </div>
+            )}
+            <div className='min-h-0 min-w-0 flex-1 overflow-hidden bg-[#0d0d10]'>
+                <div ref={containerRef} className='h-full w-full min-w-0 overflow-hidden' />
             </div>
         </div>
     );

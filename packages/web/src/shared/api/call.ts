@@ -24,7 +24,12 @@ export const interpolatePath = (path: string, values: PathValues = {}): string =
  */
 export const call = <I, O>(endpoint: Endpoint<I, O>, options: CallOptions<I> = {}) => {
     const url = interpolatePath(endpoint.path, options.path);
-    const config = options.query ? { params: options.query as Record<string, unknown> } : undefined;
+    const config = {
+        ...(options.query ? { params: options.query as Record<string, unknown> } : {}),
+        // adapterFetch otherwise adds JSON even for undefined data; an empty sentinel makes it
+        // detect then remove the header, avoiding Fastify's empty-JSON-body rejection.
+        ...(options.body === undefined ? { headers: { 'Content-Type': '' } } : {})
+    };
     // DTOs are interfaces (no index signature); alova wants a Record-shaped body.
     const body = options.body as Record<string, unknown> | undefined;
 

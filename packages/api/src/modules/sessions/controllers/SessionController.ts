@@ -6,7 +6,7 @@ import { Body, NumericParam, Query } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import SessionService from '../services/SessionService';
-import { CreateSessionInput } from '@cloud-code/contracts/modules/session/http';
+import { CreateSessionInput, UpdateSessionCliInput } from '@cloud-code/contracts/modules/session/http';
 import { sessionRoutes } from '@cloud-code/contracts/modules/session/routes';
 
 @Middleware(AuthenticatedRoute)
@@ -32,6 +32,11 @@ export default class SessionController extends BaseController{
     @Route(sessionRoutes.stop)
     stop(@CurrentUser() userId: number, @NumericParam('id') id: number){
         return this.#service.stop(userId, id);
+    }
+
+    @Route(sessionRoutes.switchCli)
+    switchCli(@CurrentUser() userId: number, @NumericParam('id') id: number, @Body() body: UpdateSessionCliInput){
+        return this.#service.switchCli(userId, id, body.cliType);
     }
 
     @Route(sessionRoutes.remove)

@@ -7,11 +7,11 @@ interface Props{
 }
 
 export const PageHeader = ({ title, description, actions }: Props) => (
-    <div className='flex items-start justify-between gap-4 px-8 pt-12 pb-10'>
+    <div className='flex flex-col items-start justify-between gap-5 px-5 pt-8 pb-8 sm:flex-row sm:gap-4 sm:px-8 sm:pt-12 sm:pb-10'>
         <div className='flex flex-col gap-3'>
-            <h1 className='text-3xl font-semibold tracking-tight text-foreground'>{title}</h1>
-            {description && <p className='max-w-xl text-[15px] text-muted'>{description}</p>}
+            <h1 className='text-2xl font-semibold tracking-tight text-foreground sm:text-3xl'>{title}</h1>
+            {description && <p className='max-w-xl text-sm leading-6 text-muted sm:text-[15px]'>{description}</p>}
         </div>
-        {actions && <div className='flex shrink-0 items-center gap-2'>{actions}</div>}
+        {actions && <div className='flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0'>{actions}</div>}
     </div>
 );

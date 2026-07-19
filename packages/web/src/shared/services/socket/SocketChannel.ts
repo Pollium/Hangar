@@ -35,9 +35,14 @@ export default class SocketChannel{
         return this.#status;
     }
 
-    send(type: string, data?: unknown): void{
-        if(this.#socket?.readyState !== WebSocket.OPEN) return;
-        this.#socket.send(JSON.stringify({ type, ...(data as object) }));
+    send(type: string, data?: unknown): boolean{
+        if(this.#socket?.readyState !== WebSocket.OPEN) return false;
+        try{
+            this.#socket.send(JSON.stringify({ type, ...(data as object) }));
+            return true;
+        }catch{
+            return false;
+        }
     }
 
     on(type: string, handler: MessageHandler<unknown>): () => void{
@@ -83,14 +88,21 @@ export default class SocketChannel{
         this.#socket = socket;
 
         socket.onopen = () => {
+            if(this.#socket !== socket){
+                socket.close();
+                return;
+            }
             this.#attempts = 0;
             this.#setStatus('open');
         };
-        socket.onmessage = (event) => this.#dispatch(event.data);
-        socket.onclose = () => this.#onClose();
+        socket.onmessage = (event) => {
+            if(this.#socket === socket) this.#dispatch(event.data);
+        };
+        socket.onclose = () => this.#onClose(socket);
     }
 
-    #onClose(): void{
+    #onClose(socket: WebSocket): void{
+        if(this.#socket !== socket) return;
         this.#socket = null;
         if(this.#released) return;
         this.#scheduleReconnect();

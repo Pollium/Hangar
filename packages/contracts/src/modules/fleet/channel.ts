@@ -1,14 +1,21 @@
-import type { Session, SessionStatus } from '../session/domain';
+import type { Session } from '../session/domain';
 
 export interface FleetSnapshotData{
     sessions: Session[];
+    revision: number;
 }
 
 export interface FleetSessionData{
+    session: Session;
+    revision: number;
+}
+
+export interface FleetRemoveData{
     sessionId: number;
-    status: SessionStatus;
+    revision: number;
 }
 
 export type FleetFrame =
     | { type: 'fleet.snapshot'; data: FleetSnapshotData }
-    | { type: 'fleet.session'; data: FleetSessionData };
+    | { type: 'fleet.session'; data: FleetSessionData }
+    | { type: 'fleet.remove'; data: FleetRemoveData };

@@ -13,17 +13,14 @@ export const CredentialList = ({ credentials, onChanged }: Props) => {
     };
 
     if(credentials.length === 0){
-        return <p className='text-sm text-muted'>No credentials yet.</p>;
+        return <p className='text-sm text-muted'>No environment variables yet.</p>;
     }
 
     return (
         <ul className='overflow-hidden rounded-xl border border-hairline'>
             {credentials.map((credential) => (
                 <li key={credential.id} className='flex items-center justify-between gap-4 border-b border-hairline px-5 py-4 last:border-b-0'>
-                    <div className='flex min-w-0 flex-col gap-0.5'>
-                        <span className='truncate text-sm font-medium text-foreground'>{credential.label}</span>
-                        <span className='truncate font-mono text-[11px] text-muted/70'>{credential.envVar}</span>
-                    </div>
+                    <span className='min-w-0 truncate font-mono text-sm font-medium text-foreground'>{credential.name}</span>
                     <button
                         type='button'
                         onClick={() => remove(credential.id)}

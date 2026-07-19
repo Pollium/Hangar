@@ -6,6 +6,11 @@ export interface SessionStatusChangedPayload{
     status: SessionStatus;
 }
 
+export interface SessionRemovedPayload{
+    sessionId: number;
+    ownerId: number;
+}
+
 export interface SessionAttentionPayload{
     sessionId: number;
     ownerId: number;

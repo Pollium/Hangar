@@ -35,8 +35,23 @@ export default class ContainerHandle{
         try{
             const info = await this.#container.inspect();
             return info.State.Running === true;
+        }catch(error){
+            if(typeof error === 'object' && error !== null && 'statusCode' in error
+                && (error as { statusCode?: unknown }).statusCode === 404) return false;
+            throw error;
+        }
+    }
+
+    /** Returns the named volume mounted at `destination`, if any. */
+    async volumeAt(destination: string): Promise<string | undefined>{
+        try{
+            const info = await this.#container.inspect();
+            const mount = info.Mounts?.find((candidate) =>
+                candidate.Type === 'volume' && candidate.Destination === destination
+            );
+            return mount?.Name;
         }catch{
-            return false;
+            return undefined;
         }
     }
 

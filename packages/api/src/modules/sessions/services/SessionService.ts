@@ -1,12 +1,16 @@
+import { eventBus } from '@/shared/events/EventBus';
 import ProjectService from '@/modules/projects/services/ProjectService';
 import { getAdapter } from '@/modules/clis/adapters/registry';
 import Session from '../models/Session';
 import SessionEvent from '../models/SessionEvent';
 import { SessionError } from '../contracts/domain/errors';
+import SessionRuntimeService from './SessionRuntimeService';
+import { terminalBridge } from './TerminalBridge';
 import type { CreateSessionInput } from '@cloud-code/contracts/modules/session/http';
 
 export default class SessionService{
     #projects = new ProjectService();
+    #runtime = new SessionRuntimeService();
 
     async create(userId: number, input: CreateSessionInput): Promise<Session>{
         const project = await this.#projects.get(userId, input.projectId);
@@ -24,7 +28,13 @@ export default class SessionService{
             cwd: '/workspace',
             lastActiveAt: new Date()
         });
-        return entity.save() as Promise<Session>;
+        const saved = await entity.save() as Session;
+        eventBus.emit('session.status_changed', {
+            sessionId: saved.id,
+            ownerId: saved.ownerId,
+            status: 'starting'
+        });
+        return saved;
     }
 
     list(userId: number, projectId?: number): Promise<Session[]>{
@@ -43,13 +53,19 @@ export default class SessionService{
 
     async stop(userId: number, sessionId: number): Promise<Session>{
         const session = await this.get(userId, sessionId);
-        session.status = 'stopped';
-        return session.save() as Promise<Session>;
+        return this.#runtime.stop(session, () => terminalBridge.release(session.id, 'stopped'));
+    }
+
+    async switchCli(userId: number, sessionId: number, cliType: string): Promise<Session>{
+        const session = await this.get(userId, sessionId);
+        // Validate the CLI up front — throws Cli::UnknownCli otherwise.
+        getAdapter(cliType);
+        return this.#runtime.switchCli(session, cliType, () => terminalBridge.release(session.id, 'restarted'));
     }
 
     async remove(userId: number, sessionId: number): Promise<void>{
         const session = await this.get(userId, sessionId);
-        await session.remove();
+        await this.#runtime.remove(session, () => terminalBridge.release(session.id, 'removed'));
     }
 
     async events(userId: number, sessionId: number): Promise<SessionEvent[]>{

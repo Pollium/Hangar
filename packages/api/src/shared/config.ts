@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { ConfigError } from '@/shared/errors/ConfigError';
 
 const required = (key: string): string => {
@@ -11,14 +12,29 @@ const optional = (key: string): string | undefined => {
     return value === undefined || value === '' ? undefined : value;
 };
 
+const jwtSecret = required('JWT_SECRET');
+const encryptionKey = required('ENCRYPTION_KEY');
+const databasePath = required('DATABASE_PATH');
 const corsOrigin = optional('CORS_ORIGIN') ?? 'http://localhost:5173';
 const port = Number(required('PORT'));
 
+// Docker names are daemon-global, while project IDs are only database-local. Use a stable
+// namespace per control plane so two databases sharing one daemon can never adopt each
+// other's containers or volumes. Existing installs get a deterministic fallback.
+const generatedNamespace = `instance-${createHash('sha256')
+    .update(`${databasePath}\0${encryptionKey}`)
+    .digest('hex')
+    .slice(0, 12)}`;
+const sandboxNamespace = optional('SANDBOX_NAMESPACE') ?? generatedNamespace;
+if(!/^[A-Za-z0-9][A-Za-z0-9_.-]{0,31}$/.test(sandboxNamespace)){
+    throw ConfigError.InvalidSandboxNamespace(sandboxNamespace);
+}
+
 export const config = {
-    jwtSecret: required('JWT_SECRET'),
-    encryptionKey: required('ENCRYPTION_KEY'),
+    jwtSecret,
+    encryptionKey,
     port,
-    databasePath: required('DATABASE_PATH'),
+    databasePath,
     corsOrigin,
     // Base URL of the web app, used to build links (e.g. notification deep-links).
     webUrl: optional('WEB_URL') ?? corsOrigin,
@@ -42,8 +58,9 @@ export const config = {
 
     docker: {
         socket: optional('DOCKER_SOCKET') ?? '/var/run/docker.sock',
+        namespace: sandboxNamespace,
         baseImage: optional('SANDBOX_BASE_IMAGE') ?? 'cloud-code/sandbox-base:ubuntu',
-        network: optional('SANDBOX_NETWORK') ?? 'cloud-code-sandboxes',
+        network: optional('SANDBOX_NETWORK') ?? `cc-${sandboxNamespace}-sandboxes`,
         // Per-sandbox resource ceilings; overridable per project within these limits.
         defaultMemoryMb: Number(optional('SANDBOX_MEMORY_MB') ?? 2048),
         defaultCpus: Number(optional('SANDBOX_CPUS') ?? 2),

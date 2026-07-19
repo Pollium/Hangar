@@ -8,7 +8,7 @@ import typia from '@typia/unplugin/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    typia({ tsconfig: './tsconfig.app.json', cache: true }), // must run before other plugins so typia.createValidate<T>() calls get compiled
+    typia({ tsconfig: './tsconfig.app.json', cache: false }), // shared contract changes must invalidate generated validators
     react(),
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss()

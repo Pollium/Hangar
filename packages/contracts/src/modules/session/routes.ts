@@ -1,5 +1,5 @@
 import { get, post, del } from '../../shared/routing';
-import type { CreateSessionInput } from './http';
+import type { CreateSessionInput, UpdateSessionCliInput } from './http';
 import type { Session, SessionEvent } from './domain';
 
 export const sessionRoutes = {
@@ -8,5 +8,6 @@ export const sessionRoutes = {
     get: get<Session>('/sessions/:id'),
     stop: post<void, Session>('/sessions/:id/stop'),
     remove: del('/sessions/:id'),
-    events: get<SessionEvent[]>('/sessions/:id/events')
+    events: get<SessionEvent[]>('/sessions/:id/events'),
+    switchCli: post<UpdateSessionCliInput, Session>('/sessions/:id/cli')
 };

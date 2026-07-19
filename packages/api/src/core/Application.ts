@@ -73,7 +73,12 @@ export default class Application{
 
     #registerErrorHandler(): void{
         this.#app.setErrorHandler((err, req, reply) => {
-            const status = err instanceof RuntimeError ? err.statusCode : 500;
+            const fastifyStatus = (err as { statusCode?: unknown }).statusCode;
+            const status = err instanceof RuntimeError
+                ? err.statusCode
+                : typeof fastifyStatus === 'number' && fastifyStatus >= 400 && fastifyStatus <= 599
+                    ? fastifyStatus
+                    : 500;
             const message = err instanceof Error ? err.message : 'Internal Server Error';
 
             if(status >= 500){

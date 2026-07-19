@@ -29,7 +29,7 @@ const autoValidateBody = (): Plugin => ({
 export default defineConfig({
     plugins: [
         autoValidateBody(),
-        typia({ tsconfig: './tsconfig.json', cache: true })
+        typia({ tsconfig: './tsconfig.json', cache: false })
     ],
     resolve: {
         alias: {

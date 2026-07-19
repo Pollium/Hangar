@@ -1,38 +1,66 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import { useChannel } from '@/shared/hooks/socket/useChannel';
+import TerminalInputGate from '@/modules/sessions/hooks/TerminalInputGate';
 import type { SessionStatus } from '@cloud-code/contracts/modules/session/domain';
-import type {
-    TerminalOutputData,
-    TerminalStatusData,
-    TerminalExitData
-} from '@cloud-code/contracts/modules/session/terminal';
 
 export const useTerminal = (sessionId: number) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const termRef = useRef<Terminal | null>(null);
     const fitRef = useRef<FitAddon | null>(null);
+    const resizeRef = useRef<() => void>(() => undefined);
+    const sendRef = useRef<(type: string, data?: unknown) => boolean>(() => false);
+    const clearErrorRef = useRef<() => void>(() => undefined);
+    const joinRef = useRef<(restart?: boolean) => void>(() => undefined);
+    const [inputGate] = useState(() => new TerminalInputGate((data) => (
+        sendRef.current('terminal.input', { data })
+    )));
     const [agentStatus, setAgentStatus] = useState<SessionStatus | null>(null);
+    const [dimensions, setDimensions] = useState({ cols: 0, rows: 0 });
 
-    const { send, status: connection } = useChannel('/sessions/terminal', {
-        'terminal.output': (data) => termRef.current?.write((data as TerminalOutputData).chunk),
-        'terminal.status': (data) => setAgentStatus((data as TerminalStatusData).status),
-        'terminal.exit': (data) => termRef.current?.write(`\r\n\x1b[90m[process exited: ${(data as TerminalExitData).code ?? 'unknown'}]\x1b[0m\r\n`)
+    const { send, clearError, status: connection, error } = useChannel('/sessions/terminal', {
+        'terminal.output': (data) => termRef.current?.write(data.chunk),
+        'terminal.status': (data) => setAgentStatus(data.status),
+        'terminal.exit': (data) => {
+            inputGate.block(true);
+            setAgentStatus('error');
+            termRef.current?.write(`\r\n\x1b[90m[process exited: ${data.code ?? 'unknown'}]\x1b[0m\r\n`);
+        },
+        'terminal.closed': (data) => {
+            if(data.reason === 'restarted'){
+                setAgentStatus('starting');
+                termRef.current?.write('\r\n\x1b[90m[switching CLI…]\x1b[0m\r\n');
+                joinRef.current(true);
+                return;
+            }
+            inputGate.block(true);
+            setAgentStatus('stopped');
+            termRef.current?.write(`\r\n\x1b[90m[session ${data.reason}]\x1b[0m\r\n`);
+        },
+        // The gateway sends ready only after the socket owns a live PTY attachment.
+        'terminal.ready': () => {
+            clearErrorRef.current();
+            resizeRef.current();
+            inputGate.open();
+        }
     });
+    sendRef.current = send;
+    clearErrorRef.current = clearError;
 
     // Create the terminal once and wire keystrokes + resize.
     useEffect(() => {
         if(!containerRef.current) return;
 
         const term = new Terminal({
-            convertEol: true,
+            // Docker provides raw PTY bytes. Rewriting LF into CRLF corrupts cursor-sensitive
+            // fullscreen TUIs such as OpenCode; snapshots are normalized by the gateway.
+            convertEol: false,
             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
             fontSize: 13,
             cursorBlink: true,
-            // Full 16-colour ANSI palette so agent CLIs (diffs, prompts, spinners) stay readable
-            // on the dark background — the xterm defaults wash out on near-black.
+            scrollback: 10_000,
             theme: {
                 background: '#0d0d10',
                 foreground: '#e6e6e9',
@@ -60,32 +88,71 @@ export const useTerminal = (sessionId: number) => {
         const fit = new FitAddon();
         term.loadAddon(fit);
         term.open(containerRef.current);
-        fit.fit();
         termRef.current = term;
         fitRef.current = fit;
 
-        const keystrokes = term.onData((data) => send('terminal.input', { data }));
+        let resizeFrame: number | null = null;
         const pushResize = () => {
-            fit.fit();
-            send('terminal.resize', { cols: term.cols, rows: term.rows });
+            if(resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
+                resizeFrame = null;
+                fit.fit();
+                if(term.cols > 0 && term.rows > 0){
+                    setDimensions((current) => current.cols === term.cols && current.rows === term.rows
+                        ? current
+                        : { cols: term.cols, rows: term.rows });
+                    send('terminal.resize', { cols: term.cols, rows: term.rows });
+                }
+            });
         };
+        resizeRef.current = pushResize;
+
+        const keystrokes = term.onData((data) => inputGate.push(data));
         const observer = new ResizeObserver(pushResize);
         observer.observe(containerRef.current);
+        pushResize();
+        void document.fonts.ready.then(pushResize);
+        term.focus();
 
         return () => {
+            if(resizeFrame !== null) cancelAnimationFrame(resizeFrame);
             keystrokes.dispose();
             observer.disconnect();
+            inputGate.block(true);
+            resizeRef.current = () => undefined;
             term.dispose();
             termRef.current = null;
             fitRef.current = null;
         };
-    }, [send]);
+    }, [inputGate, send]);
 
-    // Join (and re-join on reconnect) — the server replies with a snapshot + live stream.
+    const join = useCallback((restart = false) => {
+        inputGate.block();
+        fitRef.current?.fit();
+        const term = termRef.current;
+        send('terminal.join', {
+            sessionId,
+            ...(restart ? { restart: true } : {}),
+            ...(term ? { cols: term.cols, rows: term.rows } : {})
+        });
+    }, [inputGate, send, sessionId]);
+    joinRef.current = join;
+
+    // Block immediately whenever the transport is unavailable; a successful rejoin opens the
+    // gate only through terminal.ready, preserving keystrokes typed during reconnection.
     useEffect(() => {
-        if(connection !== 'open') return;
-        send('terminal.join', { sessionId });
-    }, [connection, sessionId, send]);
+        if(connection !== 'open') inputGate.block();
+    }, [connection, inputGate]);
 
-    return { containerRef, connection, agentStatus };
+    // Join (and re-join on reconnect) with the dimensions already measured by xterm.
+    useEffect(() => {
+        if(connection === 'open') join();
+    }, [connection, join]);
+
+    const retry = () => {
+        setAgentStatus('starting');
+        join(true);
+    };
+
+    return { containerRef, connection, agentStatus, dimensions, error, retry };
 };

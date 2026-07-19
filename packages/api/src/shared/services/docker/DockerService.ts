@@ -23,14 +23,25 @@ export default class DockerService{
     }
 
     async ensureNetwork(name: string): Promise<void>{
-        const networks = await this.#docker.listNetworks({ filters: { name: [name] } });
-        if(networks.some((n) => n.Name === name)) return;
-        await this.#docker.createNetwork({ Name: name, Driver: 'bridge', Internal: false });
-        logger.debug(name, { scope: 'docker.network.create' });
+        const find = async () => this.#docker.listNetworks({ filters: { name: [name] } });
+        if((await find()).some((network) => network.Name === name)) return;
+        try{
+            await this.#docker.createNetwork({ Name: name, Driver: 'bridge', Internal: false });
+            logger.debug(name, { scope: 'docker.network.create' });
+        }catch(error){
+            // Another request/process may have created it after our list call.
+            if((await find()).some((network) => network.Name === name)) return;
+            throw error;
+        }
     }
 
-    async ensureVolume(name: string): Promise<void>{
-        await this.#docker.createVolume({ Name: name });
+    async ensureVolume(name: string, labels: Record<string, string> = {}): Promise<void>{
+        await this.#docker.createVolume({ Name: name, Labels: labels });
+        const info = await this.#docker.getVolume(name).inspect();
+        const actual = info.Labels ?? {};
+        if(Object.entries(labels).some(([key, value]) => actual[key] !== value)){
+            throw DockerError.CreateFailed(`volume-identity:${name}`);
+        }
     }
 
     async imageExists(image: string): Promise<boolean>{

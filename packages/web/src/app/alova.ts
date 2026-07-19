@@ -16,7 +16,6 @@ export const alova = createAlova({
 
     beforeRequest(method){
         const token = useAuthStore.getState().token;
-        method.config.headers['Content-Type'] = 'application/json';
         if(token) method.config.headers.Authorization = `Bearer ${token}`;
     },
 

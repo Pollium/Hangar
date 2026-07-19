@@ -18,12 +18,19 @@ export const STATUS_LABEL: Record<SessionStatus, string> = {
     error: 'Error'
 };
 
-export const StatusDot = ({ status, pulse = true }: { status: SessionStatus; pulse?: boolean }) => (
+interface Props{
+    status: SessionStatus;
+    pulse?: boolean;
+    decorative?: boolean;
+}
+
+export const StatusDot = ({ status, pulse = true, decorative = false }: Props) => (
     <span
         className={`size-1.5 shrink-0 rounded-full ${COLOR[status]} ${
             pulse && (status === 'running' || status === 'waiting_input') ? 'animate-pulse' : ''
         }`}
-        title={STATUS_LABEL[status]}
-        aria-label={STATUS_LABEL[status]}
+        title={decorative ? undefined : STATUS_LABEL[status]}
+        aria-label={decorative ? undefined : STATUS_LABEL[status]}
+        aria-hidden={decorative || undefined}
     />
 );

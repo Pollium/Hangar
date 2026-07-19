@@ -16,6 +16,13 @@ describe('CLI adapter registry', () => {
         expect(cmd.join(' ')).toContain('cd /workspace && claude');
     });
 
+    it('uses a private executable temp directory for OpenCode native rendering', () => {
+        const cmd = getAdapter('opencode').startCommand({ cwd: '/workspace' }).join(' ');
+        expect(cmd).toContain('$HOME/.cache/opencode/tmp');
+        expect(cmd).toContain('TMPDIR=');
+        expect(cmd).toContain('opencode');
+    });
+
     it('detects a waiting-for-input prompt', () => {
         const status = getAdapter('claude-code').detectStatus('Do you want to proceed? (y/n)');
         expect(status).toBe('waiting_input');

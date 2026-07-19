@@ -39,5 +39,8 @@ export interface ContainerStats{
     memLimitMb: number;
 }
 
-/** A TTY-attached duplex: write = stdin, read = combined stdout/stderr, plus PTY resize. */
-export type PtyStream = Duplex & { resize: (cols: number, rows: number) => void };
+/** A TTY-attached duplex with resize support and the eventual Docker exec exit code. */
+export type PtyStream = Duplex & {
+    resize: (cols: number, rows: number) => void;
+    exitCode: Promise<number | null>;
+};

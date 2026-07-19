@@ -26,7 +26,6 @@ body {
 [data-theme="light"],
 .dark,
 [data-theme="dark"] {
-    --accent-foreground: #ffffff;
     --focus: var(--accent);
     --accent-soft-foreground: var(--accent);
     --radius: 0.625rem;
@@ -41,8 +40,9 @@ body {
     --foreground: #1d1d1f;
     --muted: #6e6e73;
 
-    --accent: #5856d6;
-    --accent-hover: #4b49c9;
+    --accent: #1d1d1f;
+    --accent-hover: #000000;
+    --accent-foreground: #ffffff;
     --danger: #ff3b30;
     --success: #34c759;
     --warning: #ff9500;
@@ -60,8 +60,9 @@ body {
     --foreground: #f5f5f7;
     --muted: #8e8e96;
 
-    --accent: #6e6bf6;
-    --accent-hover: #5b58e8;
+    --accent: #f5f5f7;
+    --accent-hover: #ffffff;
+    --accent-foreground: #000000;
     --danger: #ff453a;
     --success: #30d158;
     --warning: #ff9f0a;
@@ -80,13 +81,6 @@ body {
 
 @utility border-hairline {
     border-color: var(--hairline);
-}
-
-@utility bg-blueprint {
-    background-image:
-        linear-gradient(var(--grid-line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 72px 72px;
 }
 
 @keyframes enter-rise {

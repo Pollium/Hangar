@@ -7,5 +7,6 @@ export const sessionApi = {
     get: (id: number) => call(sessionRoutes.get, { path: { id } }),
     create: (body: CreateSessionInput) => call(sessionRoutes.create, { body }),
     stop: (id: number) => call(sessionRoutes.stop, { path: { id } }),
-    remove: (id: number) => call(sessionRoutes.remove, { path: { id } })
+    remove: (id: number) => call(sessionRoutes.remove, { path: { id } }),
+    switchCli: (id: number, cliType: string) => call(sessionRoutes.switchCli, { path: { id }, body: { cliType } })
 };

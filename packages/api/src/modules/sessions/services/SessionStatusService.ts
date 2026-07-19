@@ -11,22 +11,30 @@ interface Tracked{
     session: Session;
     emit: Emit;
     status: SessionStatus;
+    desiredStatus: SessionStatus;
     idleTimer: ReturnType<typeof setTimeout> | null;
+    transitionTail: Promise<void>;
 }
 
 const IDLE_MS = 8000;
+const ACTIVE_STATUSES: SessionStatus[] = ['starting', 'running', 'waiting_input', 'idle'];
 
 /**
- * Derives a session's live status from PTY output using the CLI adapter's heuristic, then
- * persists it, broadcasts a terminal.status frame, and emits domain events that notifications
- * (phase 22) and the fleet dashboard (phase 23) consume. Best-effort: if the heuristic never
- * matches, the terminal still works — only the badge is less precise.
+ * Derives a session's live status from PTY output. Transitions are serialized and persisted
+ * with compare-and-set so a late detector can never overwrite stop, remove, or exit error.
  */
 export default class SessionStatusService{
     readonly #tracked = new Map<number, Tracked>();
 
     track(session: Session, emit: Emit): void{
-        this.#tracked.set(session.id, { session, emit, status: session.status, idleTimer: null });
+        this.#tracked.set(session.id, {
+            session,
+            emit,
+            status: session.status,
+            desiredStatus: session.status,
+            idleTimer: null,
+            transitionTail: Promise.resolve()
+        });
     }
 
     untrack(sessionId: number): void{
@@ -40,32 +48,76 @@ export default class SessionStatusService{
         if(!tracked) return;
 
         const detected = getAdapter(tracked.session.cliType).detectStatus(chunk);
-        if(detected && detected !== tracked.status){
-            void this.#transition(tracked, detected);
-        }
+        if(detected) this.#queueTransition(tracked, detected);
         this.#bumpIdle(tracked);
     }
 
     #bumpIdle(tracked: Tracked): void{
         if(tracked.idleTimer) clearTimeout(tracked.idleTimer);
         // Only running sessions decay to idle; a waiting_input session stays until answered.
-        if(tracked.status !== 'running') return;
-        tracked.idleTimer = setTimeout(() => void this.#transition(tracked, 'idle'), IDLE_MS);
+        if(tracked.desiredStatus !== 'running') return;
+        tracked.idleTimer = setTimeout(() => this.#queueTransition(tracked, 'idle'), IDLE_MS);
+    }
+
+    #queueTransition(tracked: Tracked, status: SessionStatus): void{
+        if(tracked.desiredStatus === status) return;
+        tracked.desiredStatus = status;
+        tracked.transitionTail = tracked.transitionTail
+            .then(() => this.#transitionWithRetry(tracked, status))
+            .catch((error) => {
+                if(tracked.desiredStatus === status) tracked.desiredStatus = tracked.status;
+                logger.error('session status persist failed', error, {
+                    scope: 'session.status',
+                    sessionId: tracked.session.id
+                });
+            });
+    }
+
+    async #transitionWithRetry(tracked: Tracked, status: SessionStatus): Promise<void>{
+        try{
+            await this.#transition(tracked, status);
+        }catch{
+            await this.#transition(tracked, status);
+        }
     }
 
     async #transition(tracked: Tracked, status: SessionStatus): Promise<void>{
-        if(tracked.status === status) return;
-        tracked.status = status;
+        if(this.#tracked.get(tracked.session.id) !== tracked || tracked.status === status) return;
+        const previous = tracked.status;
+        if(!ACTIVE_STATUSES.includes(previous)) return;
 
-        tracked.emit({ type: 'terminal.status', data: { status } });
-
-        try{
-            tracked.session.status = status;
-            tracked.session.lastActiveAt = new Date();
-            await tracked.session.save();
-        }catch(error){
-            logger.error('session status persist failed', error, { scope: 'session.status', sessionId: tracked.session.id });
+        const activity = new Date();
+        const query = Session.createQueryBuilder()
+            .update(Session)
+            .set({ status, lastActiveAt: activity })
+            .where('id = :id', { id: tracked.session.id })
+            .andWhere('status = :status', { status: previous });
+        if(tracked.session.lastActiveAt){
+            query.andWhere('lastActiveAt = :expectedActivity', { expectedActivity: tracked.session.lastActiveAt });
+        }else{
+            query.andWhere('lastActiveAt IS NULL');
         }
+        const result = await query.execute();
+        if(!result.affected){
+            const current = await Session.findOneBy({ id: tracked.session.id });
+            if(current){
+                tracked.status = current.status;
+                if(tracked.desiredStatus === status) tracked.desiredStatus = current.status;
+                tracked.session.status = current.status;
+                tracked.session.lastActiveAt = current.lastActiveAt;
+            }
+            return;
+        }
+        if(this.#tracked.get(tracked.session.id) !== tracked) return;
+
+        tracked.status = status;
+        tracked.session.status = status;
+        tracked.session.lastActiveAt = activity;
+        if(tracked.idleTimer && status !== 'running'){
+            clearTimeout(tracked.idleTimer);
+            tracked.idleTimer = null;
+        }
+        tracked.emit({ type: 'terminal.status', data: { status } });
 
         const base = { sessionId: tracked.session.id, ownerId: tracked.session.ownerId };
         eventBus.emit('session.status_changed', { ...base, status });
