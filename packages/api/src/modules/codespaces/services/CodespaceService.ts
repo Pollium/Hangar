@@ -1,0 +1,69 @@
+import { createHmac } from 'crypto';
+import { config } from '@/shared/config';
+import SandboxService from '@/modules/sandboxes/services/SandboxService';
+import TmuxService from '@/modules/sessions/services/TmuxService';
+import ProjectService from '@/modules/projects/services/ProjectService';
+import JWTService from '@/modules/auth/services/JWTService';
+
+/**
+ * The port code-server binds inside the container — derived from the project id and the JWT
+ * secret rather than fixed. All project sandboxes share one network and code-server runs with
+ * `--auth none`, so a fixed 8080 would let one project's container reach another's editor. A
+ * secret-derived port is stable across restarts (nothing to persist, the proxy recomputes it)
+ * yet unguessable by a peer container that lacks the secret. Range 20000-59999 dodges
+ * privileged and common ports.
+ */
+export const codeServerPort = (projectId: number): number => {
+    const digest = createHmac('sha256', config.jwtSecret).update(`codespace:${projectId}`).digest();
+    return 20000 + (digest.readUInt16BE(0) % 40000);
+};
+
+// One code-server per project container, owned by tmux like agent sessions — it survives with
+// no viewer attached and re-attaches on the next open, matching the 24/7 sandbox model.
+const CODESPACE_TMUX = 'cc-codespace';
+
+// code-server's own state (settings, installed extensions, editor/workspace state) lives here on
+// the persisted /workspace volume, so it survives container restarts and recreation — mirroring
+// how project files already persist. Its default home-dir location would be lost on recreation.
+const CODESPACE_DATA = '/workspace/.codespace';
+
+/**
+ * Runs a per-project code-server (VS Code) inside the project's existing sandbox container and
+ * mints the short-lived ticket the browser iframe uses to reach it through the API proxy.
+ */
+export default class CodespaceService{
+    #sandboxes = new SandboxService();
+    #projects = new ProjectService();
+    #tmux = new TmuxService();
+    #jwt = new JWTService();
+
+    /**
+     * Authorizes access, ensures the sandbox is up, and launches code-server if it isn't
+     * already running. `ensureSession` is idempotent, so repeated opens just no-op.
+     */
+    async ensureRunning(userId: number, projectId: number): Promise<void>{
+        // SandboxService.ensureRunning skips the ownership check on the already-running path,
+        // so gate access here explicitly (throws Forbidden for non-members).
+        await this.#projects.get(userId, projectId);
+        const { handle } = await this.#sandboxes.ensureRunning(userId, projectId);
+        await this.#tmux.ensureSession(
+            handle,
+            CODESPACE_TMUX,
+            [
+                'code-server',
+                '--bind-addr', `0.0.0.0:${codeServerPort(projectId)}`,
+                '--auth', 'none',
+                '--disable-telemetry',
+                '--user-data-dir', `${CODESPACE_DATA}/user-data`,
+                '--extensions-dir', `${CODESPACE_DATA}/extensions`,
+                '/workspace'
+            ],
+            [],
+            '/workspace'
+        );
+    }
+
+    issueToken(userId: number, projectId: number): string{
+        return this.#jwt.signCodespace(userId, projectId);
+    }
+}

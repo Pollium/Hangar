@@ -13,6 +13,10 @@ import type { SandboxUsage } from '@cloud-code/contracts/modules/sandbox/domain'
 // All service instances in this API process share the same project provisioning flight.
 const provisionFlights = new Map<string, Promise<Sandbox>>();
 
+// The API only needs to join the sandbox network once per process — subsequent joins are
+// no-ops, so we skip the extra daemon round-trip on every attach after the first.
+let networkJoined = false;
+
 export default class SandboxService{
     #projects = new ProjectService();
     #docker: DockerService;
@@ -104,6 +108,10 @@ export default class SandboxService{
 
     /** Provisions or starts as needed and returns the live container. Used by session runtime. */
     async ensureRunning(userId: number, projectId: number): Promise<{ sandbox: Sandbox; handle: ContainerHandle }>{
+        if(!networkJoined){
+            await this.#docker.connectSelf(config.docker.network);
+            networkJoined = true;
+        }
         let sandbox = await Sandbox.findOneBy({ projectId });
         if(!sandbox || !sandbox.containerId){
             sandbox = await this.provision(userId, projectId);

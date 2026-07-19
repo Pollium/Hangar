@@ -3,10 +3,20 @@
 # :80 style addresses and point VITE_API_URL at the api host.
 
 {$WEB_DOMAIN} {
-	root * /srv
 	encode gzip
-	try_files {path} /index.html
-	file_server
+
+	# Per-project codespace (code-server) is proxied to the API under the SPA's own origin so
+	# the iframe is same-origin and its auth cookie is first-party. reverse_proxy upgrades WS.
+	@codespace path /codespace/*
+	handle @codespace {
+		reverse_proxy api:4000
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
 }
 
 {$API_DOMAIN} {

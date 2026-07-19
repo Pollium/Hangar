@@ -1,5 +1,6 @@
 # Base environment agents run inside. Built locally by scripts/install.sh and referenced
-# by SANDBOX_BASE_IMAGE. Ships the supported CLIs, tmux (for 24/7 sessions), git and node.
+# by SANDBOX_BASE_IMAGE. Ships the supported CLIs, tmux (for 24/7 sessions), git, node, and
+# code-server (the per-project Codespace, launched on demand inside the container).
 FROM ubuntu:24.04
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -7,6 +8,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
+
+# code-server (VS Code in the browser). Installed system-wide as root so it lands on PATH
+# for the non-root `coder` user; it runs bound to the internal sandbox network only and is
+# never published to the host — the API reverse-proxies it with a per-project auth gate.
+RUN curl -fsSL https://code-server.dev/install.sh | sh \
+    && command -v code-server
 
 # Non-root user — sandboxes never run as root. Its npm prefix is writable so the idempotent
 # adapter install check can repair an accidentally missing CLI without privilege escalation.

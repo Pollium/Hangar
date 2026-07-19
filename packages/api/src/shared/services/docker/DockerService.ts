@@ -1,3 +1,4 @@
+import os from 'os';
 import Docker from 'dockerode';
 import { config } from '@/shared/config';
 import { logger } from '@/core/utils/Logger';
@@ -32,6 +33,23 @@ export default class DockerService{
             // Another request/process may have created it after our list call.
             if((await find()).some((network) => network.Name === name)) return;
             throw error;
+        }
+    }
+
+    /**
+     * Attaches the API's own container to the sandbox network so it can reach a project
+     * container by name (`cc-<ns>-project-<id>:<port>`) — the codespace HTTP proxy needs a
+     * route the socket-only control plane otherwise lacks. Idempotent, and a no-op outside a
+     * container (dev): failures never block sandbox lifecycle, they only mean no codespace.
+     */
+    async connectSelf(network: string): Promise<void>{
+        try{
+            await this.#docker.getNetwork(network).connect({ Container: os.hostname() });
+            logger.debug(network, { scope: 'docker.network.connect' });
+        }catch(error){
+            const message = error instanceof Error ? error.message.toLowerCase() : '';
+            if(message.includes('already exists') || message.includes('already attached')) return;
+            logger.warn('could not join sandbox network', { scope: 'docker.network.connect', network });
         }
     }
 

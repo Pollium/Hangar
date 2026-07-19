@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import websocket from '@fastify/websocket';
 import { DataSource } from 'typeorm';
+import { registerCodespaceProxy } from '@/modules/codespaces/proxy/codespaceProxy';
 import { config } from '@/shared/config';
 import { createDataSource } from '@/core/models/data-source';
 import ModuleDiscovery, { type MountedController } from '@/core/modules/discovery';
@@ -47,6 +48,9 @@ export default class Application{
             limits: { fileSize: config.storage.maxUploadBytes }
         });
         await this.#app.register(websocket);
+        // Per-project code-server proxy (/codespace/<id>/*). Registered as an app-level plugin
+        // rather than a controller because it is a prefix catch-all with its own WS upgrade.
+        await registerCodespaceProxy(this.#app);
 
         const { controllers, entities, events, queues, gateways } = await new ModuleDiscovery().discover();
 
