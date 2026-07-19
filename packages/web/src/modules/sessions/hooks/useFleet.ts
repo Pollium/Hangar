@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useChannel } from '@/shared/hooks/socket/useChannel';
 import { useActiveProjectStore } from '@/modules/projects/store/activeProject';
 import type { ChannelStatus } from '@/shared/contracts/channel';
-import type { Session } from '@cloud-code/contracts/modules/session/domain';
+import type { Session } from '@hangar/contracts/modules/session/domain';
 
 type FleetConnection = 'connecting' | 'reconnecting' | 'live' | 'offline';
 

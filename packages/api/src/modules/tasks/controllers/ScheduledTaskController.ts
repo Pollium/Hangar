@@ -6,8 +6,8 @@ import { Body, NumericParam } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import ScheduledTaskService from '../services/ScheduledTaskService';
-import { CreateScheduledTaskInput, UpdateScheduledTaskInput } from '@cloud-code/contracts/modules/task/http';
-import { taskRoutes } from '@cloud-code/contracts/modules/task/routes';
+import { CreateScheduledTaskInput, UpdateScheduledTaskInput } from '@hangar/contracts/modules/task/http';
+import { taskRoutes } from '@hangar/contracts/modules/task/routes';
 
 @Middleware(AuthenticatedRoute)
 export default class ScheduledTaskController extends BaseController{

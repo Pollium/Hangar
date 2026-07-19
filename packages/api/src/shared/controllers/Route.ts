@@ -1,12 +1,12 @@
 import ClassMetadata from '@/core/utils/ClassMetadata';
 import { HttpMethod, RouteDefinition } from '@/shared/contracts/routing';
-import type { Endpoint } from '@cloud-code/contracts/shared/routing';
+import type { Endpoint } from '@hangar/contracts/shared/routing';
 
 const routesByController = new ClassMetadata<RouteDefinition>();
 
 /**
  * Mounts a handler. Prefer the contracts form — `@Route(roadmapRoutes.create)` — where the
- * full path and method come from the module's `@cloud-code/contracts` route table (single source
+ * full path and method come from the module's `@hangar/contracts` route table (single source
  * shared with the web client). The `(path, method)` string form remains for server-only
  * routes whose wire types are not in contracts yet.
  */

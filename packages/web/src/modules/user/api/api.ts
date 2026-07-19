@@ -1,8 +1,8 @@
 import { invalidateCache } from 'alova';
 import { alova } from '@/app/alova';
 import { call } from '@/shared/api/call';
-import { userRoutes } from '@cloud-code/contracts/modules/user/routes';
-import type { UpdateProfileInput } from '@cloud-code/contracts/modules/user/http';
+import { userRoutes } from '@hangar/contracts/modules/user/routes';
+import type { UpdateProfileInput } from '@hangar/contracts/modules/user/http';
 
 export const userApi = {
     me: () => call(userRoutes.me),

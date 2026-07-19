@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight, LoaderCircle, Trash2 } from 'lucide-react';
 import { sessionApi } from '@/modules/sessions/api/api';
 import { SESSION_STATUS_LABEL, SESSION_STATUS_TEXT } from '@/shared/utils/sessionStatus';
-import type { Session } from '@cloud-code/contracts/modules/session/domain';
+import type { Session } from '@hangar/contracts/modules/session/domain';
 
 const CLI_LABEL: Record<string, string> = {
     'claude-code': 'Claude Code',

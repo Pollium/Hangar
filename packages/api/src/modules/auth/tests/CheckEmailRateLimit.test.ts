@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { authRoutes } from '@cloud-code/contracts/modules/auth/routes';
+import { authRoutes } from '@hangar/contracts/modules/auth/routes';
 import { useApp } from '@tests/harness';
 import { request, expectError } from '@tests/request';
 

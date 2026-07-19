@@ -6,7 +6,7 @@ import { cliApi } from '@/modules/projects/api/api';
 import { Combobox } from '@/shared/components/ui/Combobox';
 import { useActiveProjectStore } from '@/modules/projects/store/activeProject';
 import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModal';
-import type { CliDescriptor } from '@cloud-code/contracts/modules/cli/domain';
+import type { CliDescriptor } from '@hangar/contracts/modules/cli/domain';
 
 const textInput = 'rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent placeholder:text-muted';
 

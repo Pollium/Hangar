@@ -8,8 +8,8 @@ import ProjectService from '@/modules/projects/services/ProjectService';
 import FleetGateway from '../gateways/FleetGateway';
 import type FleetService from '../services/FleetService';
 import type { GatewaySocket } from '@/shared/contracts/gateway';
-import type { FleetFrame } from '@cloud-code/contracts/modules/fleet/channel';
-import type { Session as ContractSession } from '@cloud-code/contracts/modules/session/domain';
+import type { FleetFrame } from '@hangar/contracts/modules/fleet/channel';
+import type { Session as ContractSession } from '@hangar/contracts/modules/session/domain';
 
 const framesFrom = (send: ReturnType<typeof vi.fn>): FleetFrame[] =>
     send.mock.calls.map(([raw]) => JSON.parse(raw as string) as FleetFrame);

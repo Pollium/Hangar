@@ -5,8 +5,8 @@ import { Body } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import UserService from '../services/UserService';
-import { UpdateProfileInput, ChangePasswordInput } from '@cloud-code/contracts/modules/user/http';
-import { userRoutes } from '@cloud-code/contracts/modules/user/routes';
+import { UpdateProfileInput, ChangePasswordInput } from '@hangar/contracts/modules/user/http';
+import { userRoutes } from '@hangar/contracts/modules/user/routes';
 
 @Middleware(AuthenticatedRoute)
 export default class UserController extends BaseController{

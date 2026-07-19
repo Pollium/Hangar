@@ -8,7 +8,7 @@ import SandboxService from '@/modules/sandboxes/services/SandboxService';
 import ScheduledTask from '../models/ScheduledTask';
 import { cronMatches } from './cron';
 import { ScheduledTaskError } from '../contracts/domain/errors';
-import type { CreateScheduledTaskInput, UpdateScheduledTaskInput } from '@cloud-code/contracts/modules/task/http';
+import type { CreateScheduledTaskInput, UpdateScheduledTaskInput } from '@hangar/contracts/modules/task/http';
 
 export default class ScheduledTaskService{
     #projects = new ProjectService();

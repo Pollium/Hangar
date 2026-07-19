@@ -1,6 +1,6 @@
 import { Entity, Column, Index } from 'typeorm';
 import BaseModel from '@/shared/models/BaseModel';
-import type { NotificationType } from '@cloud-code/contracts/modules/notification/domain';
+import type { NotificationType } from '@hangar/contracts/modules/notification/domain';
 
 @Entity()
 export default class Notification extends BaseModel{

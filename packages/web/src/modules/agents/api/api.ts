@@ -1,8 +1,8 @@
 import { invalidateCache } from 'alova';
 import { alova } from '@/app/alova';
 import { call } from '@/shared/api/call';
-import { agentRoutes } from '@cloud-code/contracts/modules/agent/routes';
-import type { CreateAgentInput } from '@cloud-code/contracts/modules/agent/http';
+import { agentRoutes } from '@hangar/contracts/modules/agent/routes';
+import type { CreateAgentInput } from '@hangar/contracts/modules/agent/http';
 
 const invalidateList = () => invalidateCache(alova.Get(agentRoutes.list.path));
 

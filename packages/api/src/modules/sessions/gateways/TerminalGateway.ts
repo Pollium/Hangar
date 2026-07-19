@@ -20,7 +20,7 @@ import type {
     TerminalResizePayload,
     TerminalDimensions,
     TerminalFrame
-} from '@cloud-code/contracts/modules/session/terminal';
+} from '@hangar/contracts/modules/session/terminal';
 
 const FANOUT_REPLAY_BYTES = 4 * 1024 * 1024;
 const SNAPSHOT_ATTEMPTS = 3;

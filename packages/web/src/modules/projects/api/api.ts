@@ -1,10 +1,10 @@
 import { invalidateCache } from 'alova';
 import { alova } from '@/app/alova';
 import { call } from '@/shared/api/call';
-import { projectRoutes } from '@cloud-code/contracts/modules/project/routes';
-import { sandboxRoutes } from '@cloud-code/contracts/modules/sandbox/routes';
-import { cliRoutes } from '@cloud-code/contracts/modules/cli/routes';
-import type { AddProjectRepositoryInput, CreateProjectInput, UpdateProjectInput } from '@cloud-code/contracts/modules/project/http';
+import { projectRoutes } from '@hangar/contracts/modules/project/routes';
+import { sandboxRoutes } from '@hangar/contracts/modules/sandbox/routes';
+import { cliRoutes } from '@hangar/contracts/modules/cli/routes';
+import type { AddProjectRepositoryInput, CreateProjectInput, UpdateProjectInput } from '@hangar/contracts/modules/project/http';
 
 // The default 30s GET cache would otherwise serve a stale, pre-membership-change project list
 // to the next refresh() right after creating/joining/leaving a project.

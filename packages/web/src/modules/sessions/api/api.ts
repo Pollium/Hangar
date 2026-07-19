@@ -1,6 +1,6 @@
 import { call } from '@/shared/api/call';
-import { sessionRoutes } from '@cloud-code/contracts/modules/session/routes';
-import type { CreateSessionInput } from '@cloud-code/contracts/modules/session/http';
+import { sessionRoutes } from '@hangar/contracts/modules/session/routes';
+import type { CreateSessionInput } from '@hangar/contracts/modules/session/http';
 
 export const sessionApi = {
     list: (projectId: number) => call(sessionRoutes.list, { query: { projectId } }),

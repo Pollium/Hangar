@@ -5,7 +5,7 @@ import { useForm } from '@/shared/hooks/forms/useForm';
 import { authApi } from '@/modules/auth/api/api';
 import { authErrorMessages } from '@/modules/auth/utils/errorMessages';
 import { useAuthStore } from '@/modules/auth/store/auth';
-import type { CheckEmailInput, SignInInput, SignUpInput } from '@cloud-code/contracts/modules/auth/http';
+import type { CheckEmailInput, SignInInput, SignUpInput } from '@hangar/contracts/modules/auth/http';
 import type { Validator } from '@/shared/contracts/form';
 
 export type IdentifierStep = 'email' | 'password' | 'signup';

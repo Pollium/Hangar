@@ -12,7 +12,7 @@ export default class Seed{
         return User.create({
             fullName: `User ${n}`,
             username: `user${n}`,
-            email: `user${n}@cloud-code.test`,
+            email: `user${n}@hangar.test`,
             bio: '',
             passwordHash: null,
             avatarUrl: null

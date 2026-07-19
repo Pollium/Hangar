@@ -2,7 +2,7 @@ import { logger } from '@/core/utils/Logger';
 import { AgentError } from '../contracts/domain/errors';
 import { AgentStream } from './AgentStream';
 import type { GatewaySocket } from '@/shared/contracts/gateway';
-import type { AgentOp, AgentToControl } from '@cloud-code/contracts/modules/agent/protocol';
+import type { AgentOp, AgentToControl } from '@hangar/contracts/modules/agent/protocol';
 
 interface Pending{
     resolve: (result: unknown) => void;

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { authRoutes } from '@cloud-code/contracts/modules/auth/routes';
+import { authRoutes } from '@hangar/contracts/modules/auth/routes';
 import { useApp } from '@tests/harness';
 import { request, expectError } from '@tests/request';
 import { userSeed } from '@/modules/user/tests/UserSeed';
-import type { SignUpInput } from '@cloud-code/contracts/modules/auth/http';
+import type { SignUpInput } from '@hangar/contracts/modules/auth/http';
 
 const signUp = (overrides: Partial<SignUpInput> = {}): SignUpInput => ({
     fullName: 'Ada Lovelace',
-    email: 'ada@cloud-code.test',
+    email: 'ada@hangar.test',
     username: 'ada',
     password: 'password-123',
     ...overrides
@@ -22,7 +22,7 @@ describe('AuthController', () => {
         expect(res.status).toBe(201);
         const session = res.data();
         expect(session.token).toBeTruthy();
-        expect(session.user.email).toBe('ada@cloud-code.test');
+        expect(session.user.email).toBe('ada@hangar.test');
     });
 
     it('rejects duplicate email on sign up', async () => {
@@ -59,7 +59,7 @@ describe('AuthController', () => {
         const taken = await request(ctx.app, authRoutes.checkEmail, { query: { email: user.email } });
         expect(taken.data().exists).toBe(true);
 
-        const free = await request(ctx.app, authRoutes.checkEmail, { query: { email: 'ghost@cloud-code.test' } });
+        const free = await request(ctx.app, authRoutes.checkEmail, { query: { email: 'ghost@hangar.test' } });
         expect(free.data().exists).toBe(false);
     });
 });

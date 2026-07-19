@@ -1,8 +1,8 @@
 import SecretCipher from '@/shared/services/SecretCipher';
 import Credential from '../models/Credential';
 import { CredentialError } from '../contracts/domain/errors';
-import type { CredentialView } from '@cloud-code/contracts/modules/credential/domain';
-import type { CreateCredentialInput } from '@cloud-code/contracts/modules/credential/http';
+import type { CredentialView } from '@hangar/contracts/modules/credential/domain';
+import type { CreateCredentialInput } from '@hangar/contracts/modules/credential/http';
 
 export default class CredentialService{
     #cipher = new SecretCipher();

@@ -1,6 +1,6 @@
 import { QueryFailedError } from 'typeorm';
-import { SignInInput, SignUpInput } from '@cloud-code/contracts/modules/auth/http';
-import { EmailAvailability } from '@cloud-code/contracts/modules/auth/domain';
+import { SignInInput, SignUpInput } from '@hangar/contracts/modules/auth/http';
+import { EmailAvailability } from '@hangar/contracts/modules/auth/domain';
 import { Session } from '../contracts/domain/auth';
 import { AuthError } from '../contracts/domain/errors';
 import { eventBus } from '@/shared/events/EventBus';

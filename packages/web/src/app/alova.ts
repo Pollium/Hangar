@@ -1,5 +1,5 @@
 import { createAlova } from 'alova';
-import type { ApiResponse, ApiError as ApiErrorPayload } from '@cloud-code/contracts/shared/http';
+import type { ApiResponse, ApiError as ApiErrorPayload } from '@hangar/contracts/shared/http';
 import { env } from '@/shared/config/env';
 import { useAuthStore } from '@/modules/auth/store/auth';
 import { ApiError } from '@/shared/services/ApiError';

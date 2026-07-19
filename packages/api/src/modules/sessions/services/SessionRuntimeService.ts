@@ -6,7 +6,7 @@ import SandboxService from '@/modules/sandboxes/services/SandboxService';
 import CredentialService from '@/modules/credentials/services/CredentialService';
 import { getAdapter } from '@/modules/clis/adapters/registry';
 import type { IContainerHandle, PtyStream } from '@/shared/services/docker/contracts';
-import type { TerminalDimensions } from '@cloud-code/contracts/modules/session/terminal';
+import type { TerminalDimensions } from '@hangar/contracts/modules/session/terminal';
 import Session from '../models/Session';
 import { SessionError } from '../contracts/domain/errors';
 import TmuxService from './TmuxService';

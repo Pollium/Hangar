@@ -1,4 +1,4 @@
-import type { AuthErrorCode } from '@cloud-code/contracts/modules/auth/errors';
+import type { AuthErrorCode } from '@hangar/contracts/modules/auth/errors';
 
 /**
  * Friendly copy for auth wire codes surfaced as form submit errors. Typed against the

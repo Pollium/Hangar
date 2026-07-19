@@ -11,7 +11,7 @@ import { logger, type LogLevel } from '@/core/utils/Logger';
 import { registerEventGroup } from '@/shared/events/registerEventGroup';
 import RuntimeError from '@/shared/errors/RuntimeError';
 import ValidationError from '@/shared/errors/ValidationError';
-import { ApiError } from '@cloud-code/contracts/shared/http';
+import { ApiError } from '@hangar/contracts/shared/http';
 import type BaseQueue from '@/shared/queues/BaseQueue';
 import type BaseGateway from '@/shared/gateways/BaseGateway';
 

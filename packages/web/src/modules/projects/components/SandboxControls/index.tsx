@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { sandboxApi } from '@/modules/projects/api/api';
-import type { Sandbox, SandboxStatus } from '@cloud-code/contracts/modules/sandbox/domain';
+import type { Sandbox, SandboxStatus } from '@hangar/contracts/modules/sandbox/domain';
 
 const btn = 'rounded-md border border-hairline px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-foreground/5 disabled:opacity-60';
 

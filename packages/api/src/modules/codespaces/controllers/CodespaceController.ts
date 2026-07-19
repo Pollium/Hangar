@@ -5,8 +5,8 @@ import { NumericParam } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import CodespaceService from '../services/CodespaceService';
-import { codespaceRoutes } from '@cloud-code/contracts/modules/codespace/routes';
-import type { CodespaceTicket } from '@cloud-code/contracts/modules/codespace/domain';
+import { codespaceRoutes } from '@hangar/contracts/modules/codespace/routes';
+import type { CodespaceTicket } from '@hangar/contracts/modules/codespace/domain';
 
 @Middleware(AuthenticatedRoute)
 export default class CodespaceController extends BaseController{

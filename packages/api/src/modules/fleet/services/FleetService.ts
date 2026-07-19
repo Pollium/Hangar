@@ -1,6 +1,6 @@
 import SessionService from '@/modules/sessions/services/SessionService';
 import type SessionEntity from '@/modules/sessions/models/Session';
-import type { Session } from '@cloud-code/contracts/modules/session/domain';
+import type { Session } from '@hangar/contracts/modules/session/domain';
 
 const serialize = (entity: SessionEntity): Session => ({
     id: entity.id,

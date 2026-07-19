@@ -10,7 +10,7 @@ import type {
     PtyOpenPayload,
     TcpOpenPayload,
     CreateContainerSpecWire
-} from '@cloud-code/contracts/modules/agent/protocol';
+} from '@hangar/contracts/modules/agent/protocol';
 
 const RECONNECT_MS = 2000;
 

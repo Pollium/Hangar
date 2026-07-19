@@ -1,4 +1,4 @@
-import type { SessionStatus } from '@cloud-code/contracts/modules/session/domain';
+import type { SessionStatus } from '@hangar/contracts/modules/session/domain';
 
 export const SESSION_STATUS_LABEL: Record<SessionStatus, string> = {
     starting: 'Starting',

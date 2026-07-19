@@ -9,7 +9,7 @@ import { SocketAuthenticatedRoute } from '@/modules/auth/middlewares/SocketAuthe
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import type { GatewaySocket } from '@/shared/contracts/gateway';
 import type { SessionRemovedPayload, SessionStatusChangedPayload } from '@/modules/sessions/contracts/domain/events';
-import type { FleetFrame, FleetSelectPayload } from '@cloud-code/contracts/modules/fleet/channel';
+import type { FleetFrame, FleetSelectPayload } from '@hangar/contracts/modules/fleet/channel';
 import FleetService from '../services/FleetService';
 
 interface SocketJoin{

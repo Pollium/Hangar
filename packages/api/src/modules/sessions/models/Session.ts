@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import BaseModel from '@/shared/models/BaseModel';
 import Project from '@/modules/projects/models/Project';
-import type { SessionStatus } from '@cloud-code/contracts/modules/session/domain';
+import type { SessionStatus } from '@hangar/contracts/modules/session/domain';
 
 @Entity()
 export default class Session extends BaseModel{

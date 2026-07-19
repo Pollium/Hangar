@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import BaseModel from '@/shared/models/BaseModel';
 import User from '@/modules/user/models/User';
-import type { ProjectProfile } from '@cloud-code/contracts/modules/project/domain';
+import type { ProjectProfile } from '@hangar/contracts/modules/project/domain';
 
 @Entity()
 export default class Project extends BaseModel implements ProjectProfile{

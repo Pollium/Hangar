@@ -6,7 +6,7 @@ import { NumericParam } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import SandboxService from '../services/SandboxService';
-import { sandboxRoutes } from '@cloud-code/contracts/modules/sandbox/routes';
+import { sandboxRoutes } from '@hangar/contracts/modules/sandbox/routes';
 
 @Middleware(AuthenticatedRoute)
 export default class SandboxController extends BaseController{

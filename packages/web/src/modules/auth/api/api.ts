@@ -1,6 +1,6 @@
 import { call } from '@/shared/api/call';
-import { authRoutes } from '@cloud-code/contracts/modules/auth/routes';
-import type { SignInInput, SignUpInput, CheckEmailInput } from '@cloud-code/contracts/modules/auth/http';
+import { authRoutes } from '@hangar/contracts/modules/auth/routes';
+import type { SignInInput, SignUpInput, CheckEmailInput } from '@hangar/contracts/modules/auth/http';
 
 export const authApi = {
     checkEmail: (query: CheckEmailInput) => call(authRoutes.checkEmail, { query }),

@@ -10,7 +10,7 @@ importers:
 
   packages/agent:
     dependencies:
-      '@cloud-code/contracts':
+      '@hangar/contracts':
         specifier: '*'
         version: link:../contracts
       dockerode:
@@ -38,9 +38,6 @@ importers:
 
   packages/api:
     dependencies:
-      '@cloud-code/contracts':
-        specifier: '*'
-        version: link:../contracts
       '@fastify/cors':
         specifier: ^11.3.0
         version: 11.3.0
@@ -50,6 +47,9 @@ importers:
       '@fastify/websocket':
         specifier: 11.3.0
         version: 11.3.0
+      '@hangar/contracts':
+        specifier: '*'
+        version: link:../contracts
       better-sqlite3:
         specifier: ^12.11.1
         version: 12.11.1
@@ -116,7 +116,7 @@ importers:
 
   packages/web:
     dependencies:
-      '@cloud-code/contracts':
+      '@hangar/contracts':
         specifier: '*'
         version: link:../contracts
       '@heroui/react':

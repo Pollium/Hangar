@@ -3,7 +3,7 @@ import { CircleAlert, LoaderCircle, Plus, Radar } from 'lucide-react';
 import { SessionCard } from '@/modules/dashboard/components/SessionCard';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
 import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModal';
-import type { Session, SessionStatus } from '@cloud-code/contracts/modules/session/domain';
+import type { Session, SessionStatus } from '@hangar/contracts/modules/session/domain';
 
 const PRIORITY: Record<SessionStatus, number> = {
     waiting_input: 0,

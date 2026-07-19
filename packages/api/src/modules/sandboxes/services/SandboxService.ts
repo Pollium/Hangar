@@ -8,7 +8,7 @@ import type Project from '@/modules/projects/models/Project';
 import Sandbox from '../models/Sandbox';
 import SandboxProvisioner from './SandboxProvisioner';
 import { SandboxError } from '../contracts/domain/errors';
-import type { SandboxUsage } from '@cloud-code/contracts/modules/sandbox/domain';
+import type { SandboxUsage } from '@hangar/contracts/modules/sandbox/domain';
 
 // All service instances in this API process share the same project provisioning flight.
 const provisionFlights = new Map<string, Promise<Sandbox>>();

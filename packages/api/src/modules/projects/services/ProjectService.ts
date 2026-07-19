@@ -8,7 +8,7 @@ import type {
     AddProjectRepositoryInput,
     CreateProjectInput,
     UpdateProjectInput
-} from '@cloud-code/contracts/modules/project/http';
+} from '@hangar/contracts/modules/project/http';
 
 const generateInviteToken = (): string => randomBytes(24).toString('base64url');
 

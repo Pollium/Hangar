@@ -2,14 +2,14 @@ import type {
     FleetRemoveData,
     FleetSessionData,
     FleetSnapshotData
-} from '@cloud-code/contracts/modules/fleet/channel';
+} from '@hangar/contracts/modules/fleet/channel';
 import type {
     TerminalClosedData,
     TerminalExitData,
     TerminalOutputData,
     TerminalReadyData,
     TerminalStatusData
-} from '@cloud-code/contracts/modules/session/terminal';
+} from '@hangar/contracts/modules/session/terminal';
 
 export type ChannelStatus = 'connecting' | 'open' | 'reconnecting' | 'closed';
 

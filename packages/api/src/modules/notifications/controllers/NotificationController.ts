@@ -5,7 +5,7 @@ import { NumericParam } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import NotificationService from '../services/NotificationService';
-import { notificationRoutes } from '@cloud-code/contracts/modules/notification/routes';
+import { notificationRoutes } from '@hangar/contracts/modules/notification/routes';
 
 @Middleware(AuthenticatedRoute)
 export default class NotificationController extends BaseController{

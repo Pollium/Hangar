@@ -1,11 +1,11 @@
 import RuntimeError from '@/shared/errors/RuntimeError';
-import type { ErrorTable } from '@cloud-code/contracts/shared/errors';
+import type { ErrorTable } from '@hangar/contracts/shared/errors';
 
 type ErrorFactory = (detail?: string) => RuntimeError;
 
 /**
  * Binds a domain's error table to throwable factories. The table — every `Domain::Cause`
- * bound to its HTTP status once — lives in `@cloud-code/contracts` (it is wire vocabulary the
+ * bound to its HTTP status once — lives in `@hangar/contracts` (it is wire vocabulary the
  * web derives typed code unions from); server-only modules inline it locally. Calling
  * `Errors.Cause()` builds a fresh `RuntimeError` with the `Domain::Cause` message and its
  * status, so `Error.captureStackTrace` points at the throw site. An optional detail appends

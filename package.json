@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev:api": "pnpm --filter @cloud-code/api dev",
+    "dev:api": "pnpm --filter @hangar/api dev",
     "dev:web": "pnpm --filter web dev",
-    "typecheck": "pnpm --filter @cloud-code/api typecheck && pnpm --filter web build",
-    "test": "pnpm --filter @cloud-code/api test"
+    "typecheck": "pnpm --filter @hangar/api typecheck && pnpm --filter web build",
+    "test": "pnpm --filter @hangar/api test"
   }
 }

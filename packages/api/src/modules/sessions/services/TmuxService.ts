@@ -1,6 +1,6 @@
 import { DockerError } from '@/shared/errors/DockerError';
 import type { IContainerHandle, PtyStream } from '@/shared/services/docker/contracts';
-import type { TerminalDimensions } from '@cloud-code/contracts/modules/session/terminal';
+import type { TerminalDimensions } from '@hangar/contracts/modules/session/terminal';
 
 const ensureFlights = new Map<string, Promise<void>>();
 

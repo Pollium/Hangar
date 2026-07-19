@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import BaseModel from '@/shared/models/BaseModel';
 import Session from './Session';
-import type { SessionEventKind } from '@cloud-code/contracts/modules/session/domain';
+import type { SessionEventKind } from '@hangar/contracts/modules/session/domain';
 
 /** Persisted transcript chunk, used to replay a session's screen on reconnect. */
 @Entity()

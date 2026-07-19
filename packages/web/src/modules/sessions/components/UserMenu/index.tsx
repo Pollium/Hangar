@@ -1,7 +1,7 @@
 import { Dropdown } from '@heroui/react';
 import { LogOut, Moon, Settings, Sun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { User } from '@cloud-code/contracts/modules/user/domain';
+import type { User } from '@hangar/contracts/modules/user/domain';
 import type { Theme } from '@/shared/utils/theme';
 
 interface Props{

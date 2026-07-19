@@ -10,8 +10,8 @@ import {
     AddProjectRepositoryInput,
     CreateProjectInput,
     UpdateProjectInput
-} from '@cloud-code/contracts/modules/project/http';
-import { projectRoutes } from '@cloud-code/contracts/modules/project/routes';
+} from '@hangar/contracts/modules/project/http';
+import { projectRoutes } from '@hangar/contracts/modules/project/routes';
 
 @Middleware(AuthenticatedRoute)
 export default class ProjectController extends BaseController{

@@ -7,7 +7,7 @@ import { getParamResolvers } from '@/shared/controllers/params';
 import { getClassMiddleware } from '@/shared/middlewares/Middleware';
 import RuntimeError from '@/shared/errors/RuntimeError';
 import { GatewayError } from '@/shared/errors/GatewayError';
-import { ApiError } from '@cloud-code/contracts/shared/http';
+import { ApiError } from '@hangar/contracts/shared/http';
 import { GatewaySocket, InboundFrame, OutboundMessage } from '@/shared/contracts/gateway';
 import { logger } from '@/core/utils/Logger';
 

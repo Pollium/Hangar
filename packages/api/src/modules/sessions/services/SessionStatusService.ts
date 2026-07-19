@@ -2,8 +2,8 @@ import { eventBus } from '@/shared/events/EventBus';
 import { logger } from '@/core/utils/Logger';
 import { getAdapter } from '@/modules/clis/adapters/registry';
 import Session from '../models/Session';
-import type { SessionStatus } from '@cloud-code/contracts/modules/session/domain';
-import type { TerminalFrame } from '@cloud-code/contracts/modules/session/terminal';
+import type { SessionStatus } from '@hangar/contracts/modules/session/domain';
+import type { TerminalFrame } from '@hangar/contracts/modules/session/terminal';
 
 type Emit = (frame: TerminalFrame) => void;
 

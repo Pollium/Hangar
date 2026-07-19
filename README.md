@@ -79,5 +79,5 @@ other code changes.
 ## Tests
 
 ```bash
-pnpm --filter @cloud-code/api test     # vitest, in-memory sqlite, Docker mocked
+pnpm --filter @hangar/api test     # vitest, in-memory sqlite, Docker mocked
 ```

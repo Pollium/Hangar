@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { projectApi } from '@/modules/projects/api/api';
-import type { ProjectRepositoryProfile } from '@cloud-code/contracts/modules/project/domain';
+import type { ProjectRepositoryProfile } from '@hangar/contracts/modules/project/domain';
 
 const input = 'rounded-md border border-hairline bg-surface px-2.5 py-1.5 text-xs text-foreground outline-none transition-colors focus:border-accent placeholder:text-muted';
 

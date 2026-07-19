@@ -1,5 +1,5 @@
 import PasswordService from '@/modules/auth/services/PasswordService';
-import { ChangePasswordInput, UpdateProfileInput } from '@cloud-code/contracts/modules/user/http';
+import { ChangePasswordInput, UpdateProfileInput } from '@hangar/contracts/modules/user/http';
 import { UserError } from '../contracts/domain/errors';
 import User from '../models/User';
 

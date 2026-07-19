@@ -1,6 +1,6 @@
 import { expect } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import type { Endpoint, HttpMethod } from '@cloud-code/contracts/shared/routing';
+import type { Endpoint, HttpMethod } from '@hangar/contracts/shared/routing';
 import { authHeader } from './harness';
 
 type QueryParams = Record<string, number | string>;

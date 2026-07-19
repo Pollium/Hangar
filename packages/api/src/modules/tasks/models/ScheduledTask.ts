@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import BaseModel from '@/shared/models/BaseModel';
 import Project from '@/modules/projects/models/Project';
-import type { ScheduledTaskProfile } from '@cloud-code/contracts/modules/task/domain';
+import type { ScheduledTaskProfile } from '@hangar/contracts/modules/task/domain';
 
 @Entity()
 export default class ScheduledTask extends BaseModel implements ScheduledTaskProfile{

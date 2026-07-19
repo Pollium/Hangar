@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { projectApi } from '@/modules/projects/api/api';
-import type { Project } from '@cloud-code/contracts/modules/project/domain';
+import type { Project } from '@hangar/contracts/modules/project/domain';
 
 const input = 'rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent placeholder:text-muted';
 

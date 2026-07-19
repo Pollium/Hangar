@@ -1,6 +1,6 @@
 import { eventBus } from '@/shared/events/EventBus';
 import Notification from '../models/Notification';
-import type { NotificationType } from '@cloud-code/contracts/modules/notification/domain';
+import type { NotificationType } from '@hangar/contracts/modules/notification/domain';
 
 export default class NotificationService{
     async create(ownerId: number, type: NotificationType, sessionId: number, message: string): Promise<Notification>{

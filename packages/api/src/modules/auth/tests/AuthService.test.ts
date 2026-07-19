@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { SignUpInput } from '@cloud-code/contracts/modules/auth/http';
+import { SignUpInput } from '@hangar/contracts/modules/auth/http';
 import { useApp } from '@tests/harness';
 import { userSeed } from '@/modules/user/tests/UserSeed';
 import User from '@/modules/user/models/User';
@@ -7,7 +7,7 @@ import AuthService from '../services/AuthService';
 
 const signUpInput = (overrides: Partial<SignUpInput>): SignUpInput => ({
     fullName: 'Race Case',
-    email: 'race@cloud-code.test',
+    email: 'race@hangar.test',
     username: 'racecase',
     password: 'password-123',
     ...overrides

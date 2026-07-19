@@ -6,7 +6,7 @@ import { userSeed } from '@/modules/user/tests/UserSeed';
 import { projectSeed } from '@/modules/projects/tests/ProjectSeed';
 import Session from '../models/Session';
 import SessionStatusService from '../services/SessionStatusService';
-import type { TerminalFrame } from '@cloud-code/contracts/modules/session/terminal';
+import type { TerminalFrame } from '@hangar/contracts/modules/session/terminal';
 
 const makeSession = async () => {
     const owner = await userSeed.user();

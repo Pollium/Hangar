@@ -1,5 +1,5 @@
 import { alova } from '@/app/alova';
-import type { Endpoint } from '@cloud-code/contracts/shared/routing';
+import type { Endpoint } from '@hangar/contracts/shared/routing';
 
 type PathValues = Record<string, string | number>;
 

@@ -4,7 +4,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import { useChannel } from '@/shared/hooks/socket/useChannel';
 import TerminalInputGate from '@/modules/sessions/hooks/TerminalInputGate';
-import type { SessionStatus } from '@cloud-code/contracts/modules/session/domain';
+import type { SessionStatus } from '@hangar/contracts/modules/session/domain';
 
 export const useTerminal = (sessionId: number) => {
     const containerRef = useRef<HTMLDivElement>(null);

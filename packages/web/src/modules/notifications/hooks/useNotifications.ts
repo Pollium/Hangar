@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useChannel } from '@/shared/hooks/socket/useChannel';
 import { notificationApi } from '@/modules/notifications/api/api';
-import type { Notification } from '@cloud-code/contracts/modules/notification/domain';
+import type { Notification } from '@hangar/contracts/modules/notification/domain';
 
 export const useNotifications = () => {
     const [items, setItems] = useState<Notification[]>([]);

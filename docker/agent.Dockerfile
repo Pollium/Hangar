@@ -10,10 +10,10 @@ WORKDIR /app
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/contracts/package.json packages/contracts/package.json
 COPY packages/agent/package.json packages/agent/package.json
-RUN pnpm install --filter @cloud-code/agent --frozen-lockfile
+RUN pnpm install --filter @hangar/agent --frozen-lockfile
 
 COPY packages/contracts packages/contracts
 COPY packages/agent packages/agent
 
 # CLOUD_CODE_URL and CLOUD_CODE_TOKEN are provided at `docker run` time (see the install command).
-CMD ["pnpm", "--filter", "@cloud-code/agent", "start"]
+CMD ["pnpm", "--filter", "@hangar/agent", "start"]

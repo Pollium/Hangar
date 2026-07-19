@@ -6,7 +6,7 @@ import { Canvas, Row } from '@/shared/components/ui/Blueprint';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
 import { agentApi } from '@/modules/agents/api/api';
-import type { Agent, CreatedAgent } from '@cloud-code/contracts/modules/agent/domain';
+import type { Agent, CreatedAgent } from '@hangar/contracts/modules/agent/domain';
 
 const input = 'rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent placeholder:text-muted';
 const primaryBtn = 'inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-3.5 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent-hover disabled:opacity-60';

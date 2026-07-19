@@ -9,7 +9,7 @@ import Session from '../models/Session';
 import SessionEvent from '../models/SessionEvent';
 import type SessionRuntimeService from '../services/SessionRuntimeService';
 import type { PtyStream } from '@/shared/services/docker/contracts';
-import type { TerminalFrame } from '@cloud-code/contracts/modules/session/terminal';
+import type { TerminalFrame } from '@hangar/contracts/modules/session/terminal';
 
 const makeStream = (exitCode: Promise<number | null>): PtyStream => {
     const stream = new PassThrough() as unknown as PtyStream;

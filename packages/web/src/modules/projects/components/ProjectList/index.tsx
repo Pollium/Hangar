@@ -5,7 +5,7 @@ import { ProjectInviteLink } from '@/modules/projects/components/ProjectInviteLi
 import { ProjectRepositories } from '@/modules/projects/components/ProjectRepositories';
 import { useNewProjectModalStore } from '@/modules/projects/store/newProjectModal';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
-import type { Project } from '@cloud-code/contracts/modules/project/domain';
+import type { Project } from '@hangar/contracts/modules/project/domain';
 
 interface Props{
     projects: Project[];

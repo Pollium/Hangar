@@ -6,7 +6,7 @@ import {
     nextSessionSearchIndex,
     type SessionSearchNavigationKey
 } from '@/modules/sessions/components/SessionSearch/navigation';
-import type { Session } from '@cloud-code/contracts/modules/session/domain';
+import type { Session } from '@hangar/contracts/modules/session/domain';
 
 interface Props{
     sessions: Session[];

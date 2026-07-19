@@ -1,7 +1,7 @@
 import { ScrollShadow } from '@heroui/react';
 import { useParams } from 'react-router-dom';
 import { SessionItem } from '@/modules/sessions/components/SessionItem';
-import type { Session } from '@cloud-code/contracts/modules/session/domain';
+import type { Session } from '@hangar/contracts/modules/session/domain';
 
 interface Props{
     sessions: Session[];

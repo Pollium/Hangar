@@ -1,4 +1,4 @@
-import type { SessionStatus } from '@cloud-code/contracts/modules/session/domain';
+import type { SessionStatus } from '@hangar/contracts/modules/session/domain';
 
 const COLOR: Record<SessionStatus, string> = {
     starting: 'bg-warning',

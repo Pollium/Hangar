@@ -6,8 +6,8 @@ import { Body, NumericParam, NumericQuery } from '@/shared/controllers/RequestPa
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import SessionService from '../services/SessionService';
-import { CreateSessionInput, UpdateSessionCliInput } from '@cloud-code/contracts/modules/session/http';
-import { sessionRoutes } from '@cloud-code/contracts/modules/session/routes';
+import { CreateSessionInput, UpdateSessionCliInput } from '@hangar/contracts/modules/session/http';
+import { sessionRoutes } from '@hangar/contracts/modules/session/routes';
 
 @Middleware(AuthenticatedRoute)
 export default class SessionController extends BaseController{

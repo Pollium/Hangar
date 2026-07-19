@@ -5,7 +5,7 @@ import { Param } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import ProjectService from '@/modules/projects/services/ProjectService';
-import { projectRoutes } from '@cloud-code/contracts/modules/project/routes';
+import { projectRoutes } from '@hangar/contracts/modules/project/routes';
 
 /** Own module (mount prefix `/invites`) because joining an invite is deliberately not gated
  * by project membership — the whole point is to grant it. */

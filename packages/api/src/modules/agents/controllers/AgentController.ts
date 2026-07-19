@@ -6,8 +6,8 @@ import { Body, NumericParam } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import AgentService from '../services/AgentService';
-import { agentRoutes } from '@cloud-code/contracts/modules/agent/routes';
-import { CreateAgentInput } from '@cloud-code/contracts/modules/agent/http';
+import { agentRoutes } from '@hangar/contracts/modules/agent/routes';
+import { CreateAgentInput } from '@hangar/contracts/modules/agent/http';
 
 @Middleware(AuthenticatedRoute)
 export default class AgentController extends BaseController{

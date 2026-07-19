@@ -3,8 +3,8 @@ import { agentRegistry } from '../transport/AgentRegistry';
 import { generateSecret, hashSecret, composeToken } from './AgentTokenService';
 import Agent from '../models/Agent';
 import { AgentError } from '../contracts/domain/errors';
-import type { Agent as AgentView, CreatedAgent } from '@cloud-code/contracts/modules/agent/domain';
-import type { CreateAgentInput } from '@cloud-code/contracts/modules/agent/http';
+import type { Agent as AgentView, CreatedAgent } from '@hangar/contracts/modules/agent/domain';
+import type { CreateAgentInput } from '@hangar/contracts/modules/agent/http';
 
 export default class AgentService{
     async list(userId: number): Promise<AgentView[]>{

@@ -6,7 +6,7 @@ import SessionEvent from '../models/SessionEvent';
 import { SessionError } from '../contracts/domain/errors';
 import SessionRuntimeService from './SessionRuntimeService';
 import { terminalBridge } from './TerminalBridge';
-import type { CreateSessionInput } from '@cloud-code/contracts/modules/session/http';
+import type { CreateSessionInput } from '@hangar/contracts/modules/session/http';
 
 export default class SessionService{
     #projects = new ProjectService();

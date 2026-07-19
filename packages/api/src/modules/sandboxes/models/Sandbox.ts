@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import BaseModel from '@/shared/models/BaseModel';
 import Project from '@/modules/projects/models/Project';
-import type { SandboxStatus, ResourceLimits } from '@cloud-code/contracts/modules/sandbox/domain';
+import type { SandboxStatus, ResourceLimits } from '@hangar/contracts/modules/sandbox/domain';
 
 @Entity()
 export default class Sandbox extends BaseModel{

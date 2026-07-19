@@ -3,7 +3,7 @@ import { ProjectForm } from '@/modules/projects/components/ProjectForm';
 import { useProjects } from '@/modules/projects/hooks/useProjects';
 import { useActiveProjectStore } from '@/modules/projects/store/activeProject';
 import { useNewProjectModalStore } from '@/modules/projects/store/newProjectModal';
-import type { Project } from '@cloud-code/contracts/modules/project/domain';
+import type { Project } from '@hangar/contracts/modules/project/domain';
 
 export const NewProjectModal = () => {
     const isOpen = useNewProjectModalStore((state) => state.isOpen);

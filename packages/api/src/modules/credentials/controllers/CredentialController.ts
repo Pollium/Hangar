@@ -6,8 +6,8 @@ import { Body, NumericParam } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import CredentialService from '../services/CredentialService';
-import { CreateCredentialInput } from '@cloud-code/contracts/modules/credential/http';
-import { credentialRoutes } from '@cloud-code/contracts/modules/credential/routes';
+import { CreateCredentialInput } from '@hangar/contracts/modules/credential/http';
+import { credentialRoutes } from '@hangar/contracts/modules/credential/routes';
 
 @Middleware(AuthenticatedRoute)
 export default class CredentialController extends BaseController{

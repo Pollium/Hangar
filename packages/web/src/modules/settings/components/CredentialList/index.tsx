@@ -3,7 +3,7 @@ import { Dropdown } from '@heroui/react';
 import { credentialApi } from '@/modules/settings/api/api';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
 import { useSession } from '@/shared/hooks/routing/useSession';
-import type { CredentialView } from '@cloud-code/contracts/modules/credential/domain';
+import type { CredentialView } from '@hangar/contracts/modules/credential/domain';
 
 interface Props{
     credentials: CredentialView[];

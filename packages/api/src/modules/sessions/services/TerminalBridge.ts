@@ -7,7 +7,7 @@ import Session from '../models/Session';
 import SessionEvent from '../models/SessionEvent';
 import { SessionError } from '../contracts/domain/errors';
 import type { PtyStream } from '@/shared/services/docker/contracts';
-import type { TerminalDimensions, TerminalFrame } from '@cloud-code/contracts/modules/session/terminal';
+import type { TerminalDimensions, TerminalFrame } from '@hangar/contracts/modules/session/terminal';
 
 type FrameListener = (frame: TerminalFrame) => void;
 export type TerminalReleaseReason = 'stopped' | 'removed' | 'restarted' | 'exit';

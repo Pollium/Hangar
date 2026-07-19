@@ -1,4 +1,4 @@
-import type { User } from '@cloud-code/contracts/modules/user/domain';
+import type { User } from '@hangar/contracts/modules/user/domain';
 
 export interface Session{
     token: string | null;

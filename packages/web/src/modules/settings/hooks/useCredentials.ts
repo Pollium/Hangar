@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { credentialApi } from '@/modules/settings/api/api';
-import type { CredentialView } from '@cloud-code/contracts/modules/credential/domain';
+import type { CredentialView } from '@hangar/contracts/modules/credential/domain';
 
 export const useCredentials = () => {
     const [credentials, setCredentials] = useState<CredentialView[]>([]);

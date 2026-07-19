@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { notificationRoutes } from '@cloud-code/contracts/modules/notification/routes';
+import { notificationRoutes } from '@hangar/contracts/modules/notification/routes';
 import { useApp, flushEvents } from '@tests/harness';
 import { request } from '@tests/request';
 import { eventBus } from '@/shared/events/EventBus';

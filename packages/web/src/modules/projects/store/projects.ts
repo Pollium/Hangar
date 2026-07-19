@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Project } from '@cloud-code/contracts/modules/project/domain';
+import type { Project } from '@hangar/contracts/modules/project/domain';
 
 interface ProjectsState{
     projects: Project[];

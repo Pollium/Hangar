@@ -1,5 +1,5 @@
 {
-  "name": "@cloud-code/contracts",
+  "name": "@hangar/contracts",
   "version": "0.0.0",
   "private": true,
   "type": "module",

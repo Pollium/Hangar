@@ -1,5 +1,5 @@
 import { Page } from '@/shared/contracts/params';
-import { PageMeta } from '@cloud-code/contracts/shared/http';
+import { PageMeta } from '@hangar/contracts/shared/http';
 
 /**
  * Return this from a handler to emit `{ data, meta }` instead of the plain
