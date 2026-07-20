@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Modal } from '@heroui/react';
-import { Plus, Server, Check, Copy, Trash2 } from 'lucide-react';
+import { Plus, Server, Check, Copy, Trash2, LoaderCircle } from 'lucide-react';
 import { AppShell } from '@/modules/sessions/components/AppShell';
 import { Canvas, Row } from '@/shared/components/ui/Blueprint';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
@@ -21,6 +21,13 @@ const AgentsPage = () => {
 
     const refresh = useCallback(async () => { setAgents(await agentApi.list()); }, []);
     useEffect(() => { void refresh(); }, [refresh]);
+    // Poll so online/offline stays live and a just-connected agent is detected without a refresh.
+    useEffect(() => {
+        const timer = setInterval(() => { void refresh(); }, 4000);
+        return () => clearInterval(timer);
+    }, [refresh]);
+
+    const createdOnline = created !== null && agents.some((agent) => agent.id === created.agent.id && agent.status === 'online');
 
     const submit = async () => {
         if(!name.trim()) return;
@@ -43,7 +50,15 @@ const AgentsPage = () => {
         setTimeout(() => setCopied(false), 1500);
     };
 
-    const remove = async (id: number) => { await agentApi.remove(id); void refresh(); };
+    const remove = async (id: number) => {
+        // Drop it from the list immediately; resync from the server only if the delete fails.
+        setAgents((current) => current.filter((agent) => agent.id !== id));
+        try{
+            await agentApi.remove(id);
+        }catch{
+            void refresh();
+        }
+    };
 
     return (
         <AppShell>
@@ -51,7 +66,6 @@ const AgentsPage = () => {
                 <Row>
                     <PageHeader
                         title='Compute'
-                        description='Your sessions and codespaces run on your own machines. Connect a VPS by running one command on it — the agent dials out, so no inbound ports are needed.'
                         actions={(
                             <button type='button' onClick={() => setOpen(true)} className={primaryBtn}>
                                 <Plus className='size-3.5' aria-hidden='true' />
@@ -115,6 +129,19 @@ const AgentsPage = () => {
                                             <button type='button' onClick={copy} aria-label='Copy command' className='shrink-0 rounded-md border border-hairline p-1.5 text-muted transition-colors hover:text-foreground'>
                                                 {copied ? <Check className='size-3.5 text-success' /> : <Copy className='size-3.5' />}
                                             </button>
+                                        </div>
+                                        <div className='flex items-center gap-2 rounded-md border border-hairline px-3 py-2 text-xs'>
+                                            {createdOnline ? (
+                                                <>
+                                                    <span className='size-1.5 rounded-full bg-success' aria-hidden='true' />
+                                                    <span className='font-medium text-success'>Connected — your VPS is online.</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <LoaderCircle className='size-3.5 animate-spin text-muted' aria-hidden='true' />
+                                                    <span className='text-muted'>Waiting for connection… run the command on your VPS.</span>
+                                                </>
+                                            )}
                                         </div>
                                         <button type='button' onClick={close} className={`${primaryBtn} self-start`}>Done</button>
                                     </div>

@@ -14,6 +14,13 @@
 
 	handle {
 		root * /srv
+		# Content-hashed bundles are immutable; index.html (and every SPA route that falls back to
+		# it) must revalidate so a fresh deploy's new chunk hashes are picked up without a hard
+		# refresh — otherwise a cached index requests deleted chunks and the app fails to boot.
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@notassets not path /assets/*
+		header @notassets Cache-Control "no-cache"
 		try_files {path} /index.html
 		file_server
 	}
@@ -21,5 +28,17 @@
 
 {$API_DOMAIN} {
 	# reverse_proxy transparently upgrades WebSocket connections.
+	reverse_proxy api:4000
+}
+
+# Public per-app previews: `<slug>.preview.<domain>` → the API's /__preview/<slug> proxy, which
+# relays over the owner's agent tunnel to the published container port. The slug is captured from
+# the leading host label (depth-independent) and rewritten into the path so Fastify routes by path.
+# PREVIEW_SITE is the site address: local `http://*.preview.localhost` (explicit http → no TLS
+# redirect); prod `*.preview.example.com` (auto-HTTPS, needs DNS-01 wildcard TLS).
+{$PREVIEW_SITE} {
+	encode gzip
+	@sub header_regexp sub Host ^([^.]+)\.
+	rewrite @sub /__preview/{re.sub.1}{uri}
 	reverse_proxy api:4000
 }

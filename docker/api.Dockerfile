@@ -1,5 +1,5 @@
-# Control-plane API. Talks to the host Docker daemon (socket mounted in compose) to manage
-# sandboxes. Runs the whole workspace so it can resolve @hangar/contracts.
+# Control-plane API. Holds NO Docker socket: every sandbox/codespace runs on a user's own agent,
+# reached over the outbound agent tunnel. Ships the contracts package so it can resolve @hangar/contracts.
 FROM node:22-bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends python3 build-essential \

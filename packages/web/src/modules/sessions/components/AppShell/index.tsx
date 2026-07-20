@@ -2,14 +2,16 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { ScrollShadow } from '@heroui/react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings, Plus, Code2, Server } from 'lucide-react';
+import { LayoutDashboard, Settings, Plus, Code2, Server, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { SessionSidebar } from '@/modules/sessions/components/SessionSidebar';
+import { useSidebarStore } from '@/modules/sessions/store/sidebar';
 import { SessionSearch } from '@/modules/sessions/components/SessionSearch';
 import { NewSessionModal } from '@/modules/sessions/components/NewSessionModal';
 import { UserMenu } from '@/modules/sessions/components/UserMenu';
 import { ProjectSwitcher } from '@/modules/projects/components/ProjectSwitcher';
 import { NewProjectModal } from '@/modules/projects/components/NewProjectModal';
 import { ShareProjectButton } from '@/modules/projects/components/ShareProjectButton';
+import { PublishPortsButton } from '@/modules/previews/components/PublishPortsButton';
 import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModal';
 import { useNewProjectModalStore } from '@/modules/projects/store/newProjectModal';
 import { useFleet } from '@/modules/sessions/hooks/useFleet';
@@ -49,6 +51,8 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
     const { sessions, loading: sessionsLoading } = useFleet();
     const openNewSession = useNewSessionModalStore((state) => state.open);
     const openNewProject = useNewProjectModalStore((state) => state.open);
+    const sidebarCollapsed = useSidebarStore((state) => state.collapsed);
+    const toggleSidebar = useSidebarStore((state) => state.toggle);
     const [theme, setTheme] = useState<Theme>(() =>
         document.documentElement.classList.contains('dark') ? 'dark' : 'light'
     );
@@ -66,8 +70,19 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
 
     return (
         <div className='flex h-dvh bg-background text-foreground'>
-            <aside className='hidden w-60 shrink-0 flex-col md:flex'>
-                <nav className='flex flex-col gap-0.5 pt-3' aria-label='Primary navigation'>
+            <aside className={`hidden shrink-0 flex-col overflow-hidden transition-[width] duration-200 md:flex ${sidebarCollapsed ? 'md:w-0' : 'md:w-60'}`}>
+                <div className='flex h-14 shrink-0 items-center justify-end px-2'>
+                    <button
+                        type='button'
+                        onClick={toggleSidebar}
+                        className='grid size-7 place-items-center rounded text-muted transition-colors hover:text-accent'
+                        aria-label='Hide sidebar'
+                        title='Hide sidebar'
+                    >
+                        <PanelLeftClose className='size-4' aria-hidden='true' />
+                    </button>
+                </div>
+                <nav className='flex flex-col gap-0.5' aria-label='Primary navigation'>
                     {NAV.map((item) => {
                         const Icon = item.icon;
                         return (
@@ -96,6 +111,17 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
 
             <div className='flex min-h-0 min-w-0 flex-1 flex-col'>
                 <header className='relative flex h-14 shrink-0 items-center gap-2 px-4 sm:gap-3 sm:px-6'>
+                    {sidebarCollapsed && (
+                        <button
+                            type='button'
+                            onClick={toggleSidebar}
+                            className='hidden size-6 shrink-0 place-items-center rounded text-muted transition-colors hover:text-accent md:grid'
+                            aria-label='Show sidebar'
+                            title='Show sidebar'
+                        >
+                            <PanelLeftOpen className='size-4' aria-hidden='true' />
+                        </button>
+                    )}
                     <ProjectSwitcher />
                     <button
                         type='button'
@@ -120,6 +146,7 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
                     >
                         <Plus className='size-4' aria-hidden='true' />
                     </button>
+                    <PublishPortsButton />
                     <ShareProjectButton />
                     <NotificationBell />
                     <UserMenu user={user} theme={theme} onToggleTheme={toggleTheme} onSignOut={signOut} />

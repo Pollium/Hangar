@@ -1,0 +1,22 @@
+# Keep the build context small and never ship host-built artifacts into an image.
+# node_modules is the big one: its native binaries (better-sqlite3) are built for the host,
+# and copying them over a fresh in-image install breaks the pnpm symlink tree.
+**/node_modules
+.git
+.github
+.phases
+
+# Build outputs — rebuilt inside the image. Incremental build state (.tsbuildinfo) lives next to
+# tsconfig, outside dist; shipping it makes `tsc -b` think referenced projects (contracts) are
+# already built and skip emitting their dist, breaking the web build. Never ship it.
+**/dist
+**/build
+**/*.tsbuildinfo
+
+# Local state and secrets. .env is mounted at runtime (env_file), not baked in.
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-*
+*.log

@@ -10,6 +10,8 @@ services:
     environment:
       WEB_DOMAIN: ${WEB_DOMAIN}
       API_DOMAIN: ${API_DOMAIN}
+      # Caddy site address for public app previews (e.g. http://*.preview.localhost).
+      PREVIEW_SITE: ${PREVIEW_SITE}
     ports:
       # Caddy keeps stable container listeners; only the host-facing ports change.
       - "${WEB_HOST_PORT:-80}:80"
@@ -29,7 +31,7 @@ services:
     env_file: .env
     environment:
       REDIS_HOST: redis
-      DATABASE_PATH: /data/cloud-code.sqlite
+      DATABASE_PATH: /data/hangar.sqlite
     volumes:
       # The control plane holds NO Docker socket. All sandboxes/codespaces run on users' agents
       # (their VPS), reached only over the outbound agent tunnel.

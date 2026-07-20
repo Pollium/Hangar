@@ -51,7 +51,6 @@ const Overview = () => {
                 <Row max='max-w-6xl'>
                     <PageHeader
                         title='Overview'
-                        description='Your agents in one place—what is active, what needs you, and where every session is running.'
                         actions={(
                             <button
                                 type='button'

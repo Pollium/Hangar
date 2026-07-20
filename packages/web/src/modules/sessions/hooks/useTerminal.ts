@@ -6,7 +6,7 @@ import { useChannel } from '@/shared/hooks/socket/useChannel';
 import TerminalInputGate from '@/modules/sessions/hooks/TerminalInputGate';
 import type { SessionStatus } from '@hangar/contracts/modules/session/domain';
 
-export const useTerminal = (sessionId: number) => {
+export const useTerminal = (sessionId: number, paneId?: string) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const termRef = useRef<Terminal | null>(null);
     const fitRef = useRef<FitAddon | null>(null);
@@ -45,7 +45,9 @@ export const useTerminal = (sessionId: number) => {
             resizeRef.current();
             inputGate.open();
         }
-    });
+    // A dedicated socket per pane: the gateway attaches one session per socket, so tiled
+    // terminals must not share the pooled connection or their output frames would cross.
+    }, { instanceKey: paneId });
     sendRef.current = send;
     clearErrorRef.current = clearError;
 

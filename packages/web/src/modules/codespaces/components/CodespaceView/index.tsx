@@ -23,7 +23,7 @@ export const CodespaceView = ({ projectId }: { projectId: number }) => {
     }, [projectId, attempt]);
 
     return (
-        <div className='flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl bg-[#1e1e1e]'>
+        <div className='flex h-full w-full min-w-0 flex-col overflow-hidden bg-[#1e1e1e]'>
             {failed ? (
                 <div role='alert' className='flex h-full flex-col items-center justify-center gap-3 text-sm text-muted'>
                     Could not start the codespace.

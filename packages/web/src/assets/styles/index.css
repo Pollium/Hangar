@@ -105,3 +105,13 @@ body {
     padding: 0;
     height: auto;
 }
+
+/* Hide native scrollbars on every node; scrolling still works via wheel/touch/keys. We prefer
+   HeroUI's ScrollShadow fade to signal overflow over a visible scrollbar track. */
+* {
+    scrollbar-width: none;        /* Firefox */
+    -ms-overflow-style: none;     /* legacy Edge/IE */
+}
+*::-webkit-scrollbar {
+    display: none;                /* Chromium/WebKit */
+}

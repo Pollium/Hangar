@@ -2,9 +2,23 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { channelPool } from '@/shared/services/socket/ChannelPool';
 import type { ChannelApi, ChannelHandlers, ChannelStatus, HandlersFor } from '@/shared/contracts/channel';
 
-export const useChannel = <P extends string>(path: P, handlers: HandlersFor<P>): ChannelApi => {
+interface ChannelOptions{
+    /**
+     * Opt into a dedicated socket on an otherwise shared path. Callers on the same path but with
+     * distinct keys get distinct WebSockets — required to run several terminal PTYs at once, since
+     * the gateway attaches one session per socket. Omit to keep the default shared-per-path socket.
+     */
+    instanceKey?: string;
+}
+
+export const useChannel = <P extends string>(
+    path: P,
+    handlers: HandlersFor<P>,
+    options?: ChannelOptions
+): ChannelApi => {
     const [status, setStatus] = useState<ChannelStatus>('connecting');
     const [error, setError] = useState<string | null>(null);
+    const poolKey = options?.instanceKey ? `${path}#${options.instanceKey}` : path;
 
     const handlersRef = useRef(handlers);
     useEffect(() => {
@@ -12,7 +26,7 @@ export const useChannel = <P extends string>(path: P, handlers: HandlersFor<P>):
     });
 
     useEffect(() => {
-        const channel = channelPool.acquire(path);
+        const channel = channelPool.acquire(path, poolKey);
         const offStatus = channel.onStatus((next) => {
             setStatus(next);
         });
@@ -28,13 +42,13 @@ export const useChannel = <P extends string>(path: P, handlers: HandlersFor<P>):
             offStatus();
             offError();
             offs.forEach((off) => off());
-            channelPool.release(path);
+            channelPool.release(poolKey);
         };
-    }, [path]);
+    }, [path, poolKey]);
 
     const send = useCallback((type: string, data?: unknown): boolean => (
-        channelPool.peek(path)?.send(type, data) ?? false
-    ), [path]);
+        channelPool.peek(poolKey)?.send(type, data) ?? false
+    ), [poolKey]);
     const clearError = useCallback(() => setError(null), []);
 
     return { send, clearError, status, error };

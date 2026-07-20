@@ -18,6 +18,13 @@ const databasePath = required('DATABASE_PATH');
 const corsOrigin = optional('CORS_ORIGIN') ?? 'http://localhost:5173';
 const port = Number(required('PORT'));
 
+// Public preview proxy: user-published container ports are served under `*.<previewDomain>` and
+// relayed through the owner's agent tunnel. Local runs use *.preview.localhost (loopback in the
+// browser); the browser-visible edge port (e.g. 8200) is appended to built URLs via previewPort.
+const previewDomain = optional('PREVIEW_DOMAIN') ?? 'preview.localhost';
+const previewScheme = optional('PREVIEW_SCHEME') ?? (previewDomain.includes('localhost') ? 'http' : 'https');
+const previewPort = optional('PREVIEW_PORT');
+
 // Docker names are daemon-global, while project IDs are only database-local. Use a stable
 // namespace per control plane so two databases sharing one daemon can never adopt each
 // other's containers or volumes. Existing installs get a deterministic fallback.
@@ -46,6 +53,12 @@ export const config = {
     agentImage: optional('AGENT_IMAGE') ?? 'ghcr.io/pollium/hangar-agent:latest',
     // Open registration. Set false on a personal VPS to run single-admin (see auth module).
     allowSignup: optional('ALLOW_SIGNUP') !== 'false',
+
+    preview: {
+        domain: previewDomain,
+        scheme: previewScheme,
+        port: previewPort
+    },
 
     log: {
         level: optional('LOG_LEVEL') ?? 'info',

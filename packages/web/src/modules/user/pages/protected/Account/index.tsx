@@ -88,7 +88,6 @@ const AccountPage = () => {
                 <Row>
                     <PageHeader
                         title='Account'
-                        description='Your username and avatar are visible to everyone you collaborate with.'
                     />
                 </Row>
                 <Row grow>

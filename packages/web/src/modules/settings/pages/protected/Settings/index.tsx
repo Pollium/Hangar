@@ -18,7 +18,6 @@ const SettingsPage = () => {
                 <Row>
                     <PageHeader
                         title='Environment variables'
-                        description='Add any name and value needed by your agents. Values are encrypted at rest, injected when a new agent session starts, and never shown again after saving.'
                         actions={(
                             <button
                                 type='button'

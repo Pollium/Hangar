@@ -16,7 +16,6 @@ const ProjectsPage = () => {
                 <Row>
                     <PageHeader
                         title='Projects'
-                        description='A project is a repo and its hardened sandbox. Sessions run inside it.'
                         actions={(
                             <button
                                 type='button'

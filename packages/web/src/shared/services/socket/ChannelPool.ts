@@ -8,29 +8,32 @@ interface PoolEntry{
 class ChannelPool{
     readonly #entries = new Map<string, PoolEntry>();
 
-    acquire(path: string): SocketChannel{
-        const entry = this.#entries.get(path);
+    // `path` decides the WebSocket URL; `poolKey` decides sharing. They differ only when a caller
+    // wants a dedicated socket on a shared path (e.g. one terminal PTY per tiled pane): same path,
+    // distinct key → distinct socket. Default key = path preserves the shared-per-path behaviour.
+    acquire(path: string, poolKey: string = path): SocketChannel{
+        const entry = this.#entries.get(poolKey);
         if(entry){
             entry.refs += 1;
             return entry.channel;
         }
         const channel = new SocketChannel(path);
-        this.#entries.set(path, { channel, refs: 1 });
+        this.#entries.set(poolKey, { channel, refs: 1 });
         return channel;
     }
 
-    release(path: string): void{
-        const entry = this.#entries.get(path);
+    release(poolKey: string): void{
+        const entry = this.#entries.get(poolKey);
         if(!entry) return;
         entry.refs -= 1;
         if(entry.refs <= 0){
             entry.channel.close();
-            this.#entries.delete(path);
+            this.#entries.delete(poolKey);
         }
     }
 
-    peek(path: string): SocketChannel | undefined{
-        return this.#entries.get(path)?.channel;
+    peek(poolKey: string): SocketChannel | undefined{
+        return this.#entries.get(poolKey)?.channel;
     }
 }
 
