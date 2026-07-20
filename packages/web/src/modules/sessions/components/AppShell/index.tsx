@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { ScrollShadow } from '@heroui/react';
+import { Dropdown, ScrollShadow } from '@heroui/react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings, Plus, Code2, Server, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LayoutDashboard, Settings, Plus, Code2, Server, PanelLeftClose, PanelLeftOpen, FolderPlus, SquareTerminal } from 'lucide-react';
 import { SessionSidebar } from '@/modules/sessions/components/SessionSidebar';
 import { useSidebarStore } from '@/modules/sessions/store/sidebar';
 import { SessionSearch } from '@/modules/sessions/components/SessionSearch';
@@ -123,11 +123,13 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
                         </button>
                     )}
                     <ProjectSwitcher />
+                    {/* Desktop: dedicated new-project affordance beside the switcher. On mobile this is
+                        folded into the single create menu below so the header shows one `+`, not two. */}
                     <button
                         type='button'
                         onClick={openNewProject}
                         aria-label='New project'
-                        className='grid size-6 shrink-0 place-items-center rounded text-muted transition-colors hover:text-accent'
+                        className='hidden size-6 shrink-0 place-items-center rounded text-muted transition-colors hover:text-accent md:grid'
                     >
                         <Plus className='size-3.5' aria-hidden='true' />
                     </button>
@@ -138,14 +140,28 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
                     </div>
                     <div className='min-w-0 flex-1' />
                     {headerActions}
-                    <button
-                        type='button'
-                        onClick={openNewSession}
-                        aria-label='New session'
-                        className='grid size-8 place-items-center text-muted transition-colors hover:text-accent md:hidden'
-                    >
-                        <Plus className='size-4' aria-hidden='true' />
-                    </button>
+                    {/* Mobile: one create button opening a menu, since the sidebar (which holds the
+                        new-session action on desktop) is hidden here. Avoids two identical `+` icons. */}
+                    <Dropdown.Root>
+                        <Dropdown.Trigger
+                            aria-label='Create'
+                            className='grid size-8 shrink-0 place-items-center rounded text-muted outline-none transition-colors hover:text-accent data-[open]:text-accent md:hidden'
+                        >
+                            <Plus className='size-4' aria-hidden='true' />
+                        </Dropdown.Trigger>
+                        <Dropdown.Popover placement='bottom end'>
+                            <Dropdown.Menu>
+                                <Dropdown.Item id='new-project' onAction={openNewProject}>
+                                    <FolderPlus className='size-4' aria-hidden='true' />
+                                    New project
+                                </Dropdown.Item>
+                                <Dropdown.Item id='new-session' onAction={openNewSession}>
+                                    <SquareTerminal className='size-4' aria-hidden='true' />
+                                    New session
+                                </Dropdown.Item>
+                            </Dropdown.Menu>
+                        </Dropdown.Popover>
+                    </Dropdown.Root>
                     <PublishPortsButton />
                     <ShareProjectButton />
                     <NotificationBell />

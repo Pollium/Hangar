@@ -89,14 +89,35 @@ export default class DockerService{
         return infos.map((info) => this.get(info.Id));
     }
 
-    /** Opens a raw TCP socket to a port inside a container (the codespace HTTP/WS relay). */
+    /** Opens a raw TCP socket to a port inside a container (the codespace/preview HTTP/WS relay). */
     async connect(containerId: string, port: number): Promise<net.Socket>{
-        const ip = await this.get(containerId).ipAddress();
-        if(!ip) throw new Error(`container ${containerId} has no reachable IP`);
-        const socket = net.connect({ host: ip, port });
+        const info = await this.#docker.getContainer(containerId).inspect();
+        const networks = info.NetworkSettings?.Networks ?? {};
+        const entry = Object.entries(networks).find(([, network]) => network?.IPAddress);
+        if(!entry) throw new Error(`container ${containerId} has no reachable IP`);
+        const [networkName, netInfo] = entry;
+
+        // Self-heal the network attachment. A containerized agent must sit on the sandbox network to
+        // route to the project container by IP; that attachment was only made at provision time, so
+        // after an agent restart a plain codespace/preview open to an already-running sandbox would
+        // net.connect into a network with no route and hang forever. Re-attaching on every tunnel
+        // open makes reconnection self-recover instead of needing a re-provision.
+        try{
+            await this.#docker.getNetwork(networkName).connect({ Container: os.hostname() });
+        }catch{
+            // already attached, or a host (non-containerized) agent that already routes — harmless
+        }
+
+        const socket = net.connect({ host: netInfo.IPAddress as string, port });
         await new Promise<void>((resolve, reject) => {
-            socket.once('connect', resolve);
-            socket.once('error', reject);
+            // Bound the wait: a missing route makes the SYN vanish and the socket would otherwise hang
+            // until the OS connect timeout (minutes). Fail fast so the proxy returns 502, not a 504.
+            const timer = setTimeout(() => {
+                socket.destroy();
+                reject(new Error(`connect to ${netInfo.IPAddress}:${port} timed out`));
+            }, 10_000);
+            socket.once('connect', () => { clearTimeout(timer); resolve(); });
+            socket.once('error', (error) => { clearTimeout(timer); reject(error); });
         });
         return socket;
     }
