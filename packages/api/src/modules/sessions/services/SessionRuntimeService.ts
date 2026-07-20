@@ -170,8 +170,9 @@ export default class SessionRuntimeService{
 
             if(!existed){
                 // Inject every variable the owner has so custom endpoint/config entries reach
-                // the CLI together with provider keys.
-                const env = await this.#credentials.resolveEnvFor(current.ownerId);
+                // the CLI together with provider keys. COLORTERM enables the CLIs' truecolor
+                // output (TERM inside tmux is set by tmux's default-terminal).
+                const env = [...await this.#credentials.resolveEnvFor(current.ownerId), 'COLORTERM=truecolor'];
                 await this.#install(handle, adapter.installCommand());
                 await this.#tmux.ensureSession(
                     handle,

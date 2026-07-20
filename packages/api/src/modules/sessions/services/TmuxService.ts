@@ -86,7 +86,12 @@ export default class TmuxService{
 
     /** Opens a PTY attached to the tmux session — the stream the terminal gateway bridges. */
     attach(handle: IContainerHandle, name: string): Promise<PtyStream>{
-        return handle.openPty(['tmux', 'attach-session', '-t', name]);
+        // Advertise a modern terminal to the tmux client so it (and the agent CLI it hosts)
+        // negotiate 256-color + truecolor with xterm.js. Without TERM the exec PTY defaults to a
+        // dumb terminal and the Ink-based CLIs drop to a degraded palette / no cursor addressing.
+        return handle.openPty(['tmux', 'attach-session', '-t', name], {
+            env: ['TERM=xterm-256color', 'COLORTERM=truecolor']
+        });
     }
 
     /** Plain-text snapshot of the current pane, replayed to a client on join. */

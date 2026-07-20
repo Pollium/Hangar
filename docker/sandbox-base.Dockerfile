@@ -34,6 +34,16 @@ RUN npm install -g \
     && command -v opencode \
     && command -v gemini
 
+# tmux config for the agent CLIs (Ink-based TUIs). Truecolor passthrough so 24-bit palettes reach
+# xterm.js; tmux-256color as the inner TERM; a short escape-time so ESC-driven keybindings in the
+# CLIs feel native instead of lagging behind tmux's default 500ms.
+RUN printf '%s\n' \
+        'set -g default-terminal "tmux-256color"' \
+        'set -ga terminal-overrides ",*:Tc"' \
+        'set -sg escape-time 10' \
+        'set -g focus-events on' \
+        > /home/coder/.tmux.conf
+
 WORKDIR /workspace
 
 # Keeper process: keeps the container alive with no session attached (24/7).

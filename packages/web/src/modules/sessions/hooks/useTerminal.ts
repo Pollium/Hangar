@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
+import { WebglAddon } from '@xterm/addon-webgl';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
 import '@xterm/xterm/css/xterm.css';
 import { useChannel } from '@/shared/hooks/socket/useChannel';
 import TerminalInputGate from '@/modules/sessions/hooks/TerminalInputGate';
@@ -56,6 +58,10 @@ export const useTerminal = (sessionId: number, paneId?: string) => {
         if(!containerRef.current) return;
 
         const term = new Terminal({
+            // Required for the unicode11 addon (proposed width API). Without correct wide-char
+            // widths the box-drawing/emoji in Ink-based agent TUIs (claude, opencode, gemini)
+            // misalign their frames.
+            allowProposedApi: true,
             // Docker provides raw PTY bytes. Rewriting LF into CRLF corrupts cursor-sensitive
             // fullscreen TUIs such as OpenCode; snapshots are normalized by the gateway.
             convertEol: false,
@@ -88,8 +94,22 @@ export const useTerminal = (sessionId: number, paneId?: string) => {
             }
         });
         const fit = new FitAddon();
+        const unicode11 = new Unicode11Addon();
         term.loadAddon(fit);
+        term.loadAddon(unicode11);
+        // Wide-char widths matching a modern native terminal (emoji, CJK, powerline, box-drawing).
+        term.unicode.activeVersion = '11';
         term.open(containerRef.current);
+        // GPU renderer: the default DOM renderer tears/flickers under the high-frequency repaints
+        // agent TUIs produce (spinners, token streaming). Fall back to DOM if the context is lost
+        // or WebGL is unavailable, so the terminal always renders.
+        try{
+            const webgl = new WebglAddon();
+            webgl.onContextLoss(() => webgl.dispose());
+            term.loadAddon(webgl);
+        }catch{
+            // no WebGL (old GPU/driver/headless) — xterm keeps its DOM renderer
+        }
         termRef.current = term;
         fitRef.current = fit;
 
