@@ -152,7 +152,7 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
                     <UserMenu user={user} theme={theme} onToggleTheme={toggleTheme} onSignOut={signOut} />
                 </header>
                 <main className='min-h-0 flex-1 overflow-hidden pb-14 md:pb-0'>
-                    {bleed ? children : <ScrollShadow className='h-full pt-8'>{children}</ScrollShadow>}
+                    {bleed ? children : <ScrollShadow className='h-full px-4 pt-8 md:px-0'>{children}</ScrollShadow>}
                 </main>
             </div>
 
