@@ -13,6 +13,9 @@ import type {
 } from '@hangar/contracts/modules/agent/protocol';
 
 const RECONNECT_MS = 2000;
+// Ping the control plane on this cadence. A dead link is detected within ~2 intervals (one to
+// ping, one to notice no pong), so recovery is ≤2×HEARTBEAT_MS.
+const HEARTBEAT_MS = 30000;
 
 /**
  * The agent side of the tunnel. Dials the control plane (outbound only — no inbound ports),
@@ -25,6 +28,8 @@ export class AgentClient{
     readonly #docker: DockerService;
     #ws: WebSocket | undefined;
     #streams = new Map<string, Duplex>();
+    #heartbeat: ReturnType<typeof setInterval> | undefined;
+    #alive = false;
 
     constructor(url: string, token: string, dockerSocket: string){
         this.#url = url;
@@ -40,7 +45,12 @@ export class AgentClient{
         const ws = new WebSocket(`${this.#url}/agents/gateway`, this.#token);
         this.#ws = ws;
 
-        ws.on('open', () => console.log('[agent] connected to control plane'));
+        ws.on('open', () => {
+            console.log('[agent] connected to control plane');
+            this.#alive = true;
+            this.#startHeartbeat();
+        });
+        ws.on('pong', () => { this.#alive = true; });
         ws.on('message', (raw: WebSocket.RawData) => { void this.#onFrame(raw.toString()); });
         ws.on('error', (error: Error) => console.error('[agent] socket error:', error.message));
         ws.on('close', () => {
@@ -50,7 +60,30 @@ export class AgentClient{
         });
     }
 
+    /**
+     * Liveness heartbeat. A control-plane restart can leave this socket half-open — no close frame
+     * survives the outbound proxy chain (NPM/Caddy), so `ws` never fires 'close' and the agent would
+     * sit on a zombie connection forever. Pinging and terminating on a missed pong forces the 'close'
+     * path (and thus the reconnect) even when the drop was silent.
+     */
+    #startHeartbeat(): void{
+        this.#stopHeartbeat();
+        this.#heartbeat = setInterval(() => {
+            const ws = this.#ws;
+            if(!ws) return;
+            if(!this.#alive){ ws.terminate(); return; }
+            this.#alive = false;
+            try{ ws.ping(); }catch{ /* ping on a closing socket throws; the close handler reconnects */ }
+        }, HEARTBEAT_MS);
+    }
+
+    #stopHeartbeat(): void{
+        if(this.#heartbeat){ clearInterval(this.#heartbeat); this.#heartbeat = undefined; }
+    }
+
     #reset(): void{
+        this.#stopHeartbeat();
+        this.#alive = false;
         for(const stream of this.#streams.values()) stream.destroy();
         this.#streams.clear();
         this.#ws = undefined;

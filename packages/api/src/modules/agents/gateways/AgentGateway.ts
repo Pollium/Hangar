@@ -10,6 +10,11 @@ import AgentConnection from '../transport/AgentConnection';
 import Agent from '../models/Agent';
 import type { GatewaySocket } from '@/shared/contracts/gateway';
 
+// Ping connected agents on this cadence and drop any that miss a pong, so a half-open socket
+// (agent host slept, network died, no clean close) is reaped instead of lingering as a zombie
+// registration that swallows RPCs and reports the agent falsely online.
+const HEARTBEAT_MS = 30000;
+
 /**
  * The tunnel endpoint an agent dials. Unlike the JSON `{type}` gateways, this speaks the raw agent
  * protocol (`{t}` frames), so it bypasses BaseGateway's message dispatch and wires the socket
@@ -41,8 +46,19 @@ export default class AgentGateway extends BaseGateway{
         void Agent.update(ctx.agentId, { lastSeenAt: new Date() });
         logger.debug('agent connected', { scope: 'agent.tunnel', agentId: ctx.agentId, ownerId: ctx.ownerId });
 
+        // Liveness: a missed pong between ticks means the link is gone; terminate to fire 'close',
+        // which unregisters the connection below. The agent independently pings us too.
+        let alive = true;
+        socket.on('pong', () => { alive = true; });
+        const heartbeat = setInterval(() => {
+            if(!alive){ socket.terminate(); return; }
+            alive = false;
+            try{ socket.ping(); }catch{ /* socket already closing; the close handler cleans up */ }
+        }, HEARTBEAT_MS);
+
         socket.on('message', (raw: Buffer) => connection.ingest(raw.toString()));
         socket.on('close', () => {
+            clearInterval(heartbeat);
             agentRegistry.unregister(ctx.ownerId, ctx.agentId, connection);
             connection.dispose();
             void Agent.update(ctx.agentId, { lastSeenAt: new Date() });
