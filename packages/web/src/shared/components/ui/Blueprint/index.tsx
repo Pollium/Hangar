@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react';
 
+// h-full (not min-h-full) so a `Row grow` child resolves a real height and flex-1 fills the
+// viewport — min-height doesn't establish a definite height for flex distribution, which left
+// full-height content (e.g. empty states) collapsing to their content. Tall content still scrolls:
+// it overflows this fixed-height box and expands the parent ScrollShadow's scroll area.
 export const Canvas = ({ children }: { children: ReactNode }) => (
-    <div className='flex min-h-full flex-col'>{children}</div>
+    <div className='flex h-full flex-col'>{children}</div>
 );
 
 interface RowProps{

@@ -8,7 +8,7 @@ interface Props{
 }
 
 export const EmptyState = ({ icon: Icon, title, description, action }: Props) => (
-    <div className='flex h-full min-h-72 flex-1 flex-col items-center justify-center gap-4 rounded-2xl bg-surface/40 px-6 text-center'>
+    <div className='flex h-full flex-1 flex-col items-center justify-center gap-4 rounded-2xl bg-surface/40 px-6 text-center'>
         {Icon && (
             <span className='grid size-11 place-items-center rounded-2xl bg-foreground/[0.05] text-muted' aria-hidden='true'>
                 <Icon className='size-5' />
