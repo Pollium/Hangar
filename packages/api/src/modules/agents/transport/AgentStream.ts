@@ -32,6 +32,13 @@ export class AgentStream extends Duplex implements PtyStream{
             this.#resolveReady = resolve;
             this.#rejectReady = reject;
         });
+        // A tunnel open can fail (e.g. the published port refuses the connection) before any
+        // consumer awaits whenReady or attaches a socket 'error' listener. Left unguarded, that
+        // rejection/error is unhandled and takes down the whole control plane — a single dead
+        // preview port would crash the process and drop every connected agent. Both paths still
+        // surface to consumers that do listen; these are only floor handlers.
+        this.whenReady.catch(() => {});
+        this.on('error', () => {});
         this.exitCode = new Promise<number | null>((resolve) => { this.#resolveExit = resolve; });
     }
 
