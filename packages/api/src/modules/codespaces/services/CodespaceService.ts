@@ -4,6 +4,7 @@ import SandboxService from '@/modules/sandboxes/services/SandboxService';
 import TmuxService from '@/modules/sessions/services/TmuxService';
 import ProjectService from '@/modules/projects/services/ProjectService';
 import JWTService from '@/modules/auth/services/JWTService';
+import CredentialService from '@/modules/credentials/services/CredentialService';
 
 /**
  * The port code-server binds inside the container — derived from the project id and the JWT
@@ -36,6 +37,7 @@ export default class CodespaceService{
     #projects = new ProjectService();
     #tmux = new TmuxService();
     #jwt = new JWTService();
+    #credentials = new CredentialService();
 
     /**
      * Authorizes access, ensures the sandbox + code-server are up on the owner's agent, and mints
@@ -47,6 +49,9 @@ export default class CodespaceService{
         // so gate access here explicitly (throws Forbidden for non-members).
         await this.#projects.get(userId, projectId);
         const { sandbox, handle } = await this.#sandboxes.ensureRunning(userId, projectId);
+        // code-server inherits the opener's credentials so its integrated terminal can `git push`
+        // (GITHUB_TOKEN + git identity) and reach providers, exactly like an agent session.
+        const env = await this.#credentials.resolveEnvFor(userId);
         await this.#tmux.ensureSession(
             handle,
             CODESPACE_TMUX,
@@ -59,7 +64,7 @@ export default class CodespaceService{
                 '--extensions-dir', `${CODESPACE_DATA}/extensions`,
                 '/workspace'
             ],
-            [],
+            env,
             '/workspace'
         );
 
