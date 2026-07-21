@@ -42,7 +42,9 @@ export const GithubConnect = () => {
         try{
             const creds = await credentialApi.list();
             await Promise.all(creds.filter((c) => MANAGED.includes(c.name)).map((c) => credentialApi.remove(c.id)));
-            refresh();
+            // Reflect immediately: we just removed the token, so don't re-read the (cached) list —
+            // that races the cache invalidation and would show "Connected" until a manual refresh.
+            setConnected(false);
         }finally{
             setBusy(false);
         }
