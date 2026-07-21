@@ -5,6 +5,7 @@ import websocket from '@fastify/websocket';
 import { DataSource } from 'typeorm';
 import { registerCodespaceProxy } from '@/modules/codespaces/proxy/codespaceProxy';
 import { registerPreviewProxy } from '@/modules/previews/proxy/previewProxy';
+import { registerGithubOAuth } from '@/modules/auth/oauth/githubOAuth';
 import { config } from '@/shared/config';
 import { createDataSource } from '@/core/models/data-source';
 import ModuleDiscovery, { type MountedController } from '@/core/modules/discovery';
@@ -55,6 +56,10 @@ export default class Application{
         // Public per-slug proxy (/__preview/<slug>/*) for user-published container ports; Caddy
         // rewrites `<slug>.preview.<domain>` to this prefix. Also a prefix catch-all with WS.
         registerPreviewProxy(this.#app);
+
+        // Redirect + JSON routes for the GitHub OAuth "Connect" flow (raw, like the proxies —
+        // the callback is a browser redirect, not a typed controller response).
+        registerGithubOAuth(this.#app);
 
         const { controllers, entities, events, queues, gateways } = await new ModuleDiscovery().discover();
 

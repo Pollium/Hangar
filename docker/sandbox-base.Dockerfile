@@ -44,6 +44,13 @@ RUN printf '%s\n' \
         'set -g focus-events on' \
         > /home/coder/.tmux.conf
 
+# Git credential helper for `git push` when a session carries a GITHUB_TOKEN (set by the app's
+# "Connect GitHub" OAuth flow). Scoped to github.com so the token never leaks to other remotes;
+# reads the env var at push time, so the token is never written to disk in the workspace. The
+# single quotes keep $GITHUB_TOKEN literal at build time — git expands it per invocation.
+RUN git config --global credential.'https://github.com'.helper \
+        '!f() { echo username=x-access-token; echo "password=$GITHUB_TOKEN"; }; f'
+
 WORKDIR /workspace
 
 # Keeper process: keeps the container alive with no session attached (24/7).

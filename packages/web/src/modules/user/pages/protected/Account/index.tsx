@@ -5,6 +5,7 @@ import { Canvas, Row } from '@/shared/components/ui/Blueprint';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { useSession } from '@/shared/hooks/routing/useSession';
 import { userApi } from '@/modules/user/api/api';
+import { GithubConnect } from '@/modules/user/components/GithubConnect';
 
 const input = 'rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent placeholder:text-muted';
 
@@ -157,6 +158,7 @@ const AccountPage = () => {
                         >
                             {busy ? 'Saving…' : 'Save changes'}
                         </button>
+                        <GithubConnect />
                     </div>
                 </Row>
             </Canvas>

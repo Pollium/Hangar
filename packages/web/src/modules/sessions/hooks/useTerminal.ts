@@ -4,6 +4,11 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
 import { Unicode11Addon } from '@xterm/addon-unicode11';
 import '@xterm/xterm/css/xterm.css';
+// Self-hosted so glyph coverage (box-drawing, block elements, braille used by agent-CLI logos and
+// spinners) is identical on every machine instead of depending on the OS monospace font, whose
+// per-glyph fallback substitution breaks the monospace grid and mangles art like Claude's logo.
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/700.css';
 import { useChannel } from '@/shared/hooks/socket/useChannel';
 import TerminalInputGate from '@/modules/sessions/hooks/TerminalInputGate';
 import type { SessionStatus } from '@hangar/contracts/modules/session/domain';
@@ -65,7 +70,7 @@ export const useTerminal = (sessionId: number, paneId?: string) => {
             // Docker provides raw PTY bytes. Rewriting LF into CRLF corrupts cursor-sensitive
             // fullscreen TUIs such as OpenCode; snapshots are normalized by the gateway.
             convertEol: false,
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+            fontFamily: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
             fontSize: 13,
             cursorBlink: true,
             scrollback: 10_000,

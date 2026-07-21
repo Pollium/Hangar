@@ -37,6 +37,11 @@ if(!/^[A-Za-z0-9][A-Za-z0-9_.-]{0,31}$/.test(sandboxNamespace)){
     throw ConfigError.InvalidSandboxNamespace(sandboxNamespace);
 }
 
+// Public base URL of this control-plane API — the address a user's browser and agent dial back
+// into. Falls back to WEB_URL for single-host local runs. Hoisted so the GitHub OAuth callback
+// default can reuse it.
+const publicApiUrl = optional('PUBLIC_API_URL') ?? optional('WEB_URL') ?? corsOrigin;
+
 export const config = {
     jwtSecret,
     encryptionKey,
@@ -47,7 +52,16 @@ export const config = {
     webUrl: optional('WEB_URL') ?? corsOrigin,
     // Public base URL of this control-plane API — the address an agent on a user's VPS dials
     // back into. Falls back to WEB_URL for single-host local runs.
-    publicApiUrl: optional('PUBLIC_API_URL') ?? optional('WEB_URL') ?? corsOrigin,
+    publicApiUrl,
+
+    // GitHub OAuth (App) for "Connect GitHub" — mints a user access token stored as the
+    // GITHUB_TOKEN credential so sandboxes can push. Optional: unset disables the feature.
+    github: {
+        clientId: optional('GITHUB_OAUTH_CLIENT_ID'),
+        clientSecret: optional('GITHUB_OAUTH_CLIENT_SECRET'),
+        callbackUrl: optional('GITHUB_OAUTH_CALLBACK_URL') ?? `${publicApiUrl}/auth/github/callback`,
+        scope: 'repo read:user user:email'
+    },
     // Published agent image referenced by the "Connect a VPS" install command. Kept in env (not
     // code) so the registry/name can change — e.g. after renaming the project — without a rebuild.
     agentImage: optional('AGENT_IMAGE') ?? 'ghcr.io/pollium/hangar-agent:latest',

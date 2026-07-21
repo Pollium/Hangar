@@ -36,6 +36,21 @@ export default class JWTService{
         }, config.jwtSecret, { expiresIn: '2m' });
     }
 
+    /**
+     * Short-lived state token for the GitHub OAuth round-trip. Carries the initiating user so the
+     * public callback can attach the minted access token to the right account, and doubles as the
+     * CSRF `state` (a forged callback can't produce a validly-signed state for a real user).
+     */
+    signGithubState(userId: number): string{
+        return jwt.sign({ sub: String(userId), scope: 'github-oauth' }, config.jwtSecret, { expiresIn: '10m' });
+    }
+
+    verifyGithubState(token: string): number{
+        const payload = jwt.verify(token, config.jwtSecret) as TokenPayload & { scope?: string };
+        if(payload.scope !== 'github-oauth') throw new Error('not a github-oauth state');
+        return Number(payload.sub);
+    }
+
     verifyCodespace(token: string): CodespacePayload{
         const payload = jwt.verify(token, config.jwtSecret) as TokenPayload & {
             scope?: string; projectId?: number; ownerId?: number; containerId?: string;

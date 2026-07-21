@@ -71,7 +71,8 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
     return (
         <div className='flex h-dvh bg-background text-foreground'>
             <aside className={`hidden shrink-0 flex-col overflow-hidden transition-[width] duration-200 md:flex ${sidebarCollapsed ? 'md:w-0' : 'md:w-60'}`}>
-                <div className='flex h-14 shrink-0 items-center justify-end px-2'>
+                <div className='flex h-14 shrink-0 items-center justify-between px-2'>
+                    <span className='px-1.5 text-sm font-semibold tracking-tight text-foreground'>HANGAR</span>
                     <button
                         type='button'
                         onClick={toggleSidebar}

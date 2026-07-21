@@ -20,6 +20,27 @@ export default class CredentialService{
         return this.#view(credential);
     }
 
+    /**
+     * Internal upsert (never HTTP-exposed): store or replace an owner's variable by name. Used by
+     * the GitHub OAuth callback to persist the minted token + git identity so they inject into the
+     * sandbox like any other credential. Idempotent — reconnecting overwrites, never duplicates.
+     */
+    async upsertInternal(userId: number, name: string, value: string): Promise<void>{
+        const existing = await Credential.findOneBy({ ownerId: userId, envVar: name });
+        if(existing){
+            existing.ciphertext = this.#cipher.encrypt(value);
+            await existing.save();
+            return;
+        }
+        await Credential.create({
+            ownerId: userId,
+            provider: 'github',
+            label: name,
+            envVar: name,
+            ciphertext: this.#cipher.encrypt(value)
+        }).save();
+    }
+
     async list(userId: number): Promise<CredentialView[]>{
         const credentials = await Credential.findBy({ ownerId: userId });
         return credentials.map((credential) => this.#view(credential));
