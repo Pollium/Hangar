@@ -7,7 +7,8 @@ export const SandboxErrors = {
         NotProvisioned: 409,
         ProvisionFailed: 500,
         InvalidPath: 400,
-        CloneFailed: 502
+        CloneFailed: 502,
+        FileOperationFailed: 502
     }
 } as const satisfies ErrorTable;
 

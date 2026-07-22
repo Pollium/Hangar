@@ -146,6 +146,46 @@ export default class SandboxService{
         return entries.sort((a, b) => a.type !== b.type ? (a.type === 'dir' ? -1 : 1) : a.name.localeCompare(b.name));
     }
 
+    /** Normalizes a requested path and confines it strictly inside /workspace (never the root). */
+    #resolveWorkspacePath(requested: string, { allowRoot = false } = {}): string{
+        const target = pathPosix.normalize(requested.trim());
+        const inside = target === WORKSPACE || target.startsWith(`${WORKSPACE}/`);
+        if(!inside) throw SandboxError.InvalidPath();
+        if(!allowRoot && target === WORKSPACE) throw SandboxError.InvalidPath();
+        return target;
+    }
+
+    /**
+     * Renames/moves a workspace entry. Both paths are confined to /workspace (the root itself can
+     * never be the source or destination). Runs `mv` as argv — a path can never be interpreted as
+     * shell syntax. `-n` (no-clobber) refuses to overwrite an existing destination.
+     */
+    async renameFile(userId: number, projectId: number, from: string, to: string): Promise<void>{
+        const src = this.#resolveWorkspacePath(from);
+        const dest = this.#resolveWorkspacePath(to);
+
+        const { handle } = await this.ensureRunning(userId, projectId);
+        const result = await handle.exec(['mv', '-n', '--', src, dest]);
+        if(result.exitCode !== 0){
+            throw SandboxError.FileOperationFailed(result.output.split('\n').filter(Boolean).pop() || 'rename failed');
+        }
+    }
+
+    /**
+     * Deletes a workspace entry (file or directory, recursively). Confined to /workspace and never
+     * the root itself. Runs `rm -rf` as argv with a `--` guard so a path can neither escape the
+     * workspace nor be read as an option or shell syntax.
+     */
+    async deleteFile(userId: number, projectId: number, path: string): Promise<void>{
+        const target = this.#resolveWorkspacePath(path);
+
+        const { handle } = await this.ensureRunning(userId, projectId);
+        const result = await handle.exec(['rm', '-rf', '--', target]);
+        if(result.exitCode !== 0){
+            throw SandboxError.FileOperationFailed(result.output.split('\n').filter(Boolean).pop() || 'delete failed');
+        }
+    }
+
     /**
      * Source-control view of the workspace: every git repo under /workspace (by subdirectory
      * slug) and, for the requested `repo` (defaulting to the first), its branches and recent

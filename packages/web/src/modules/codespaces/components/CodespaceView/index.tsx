@@ -5,10 +5,13 @@ import { codespaceApi } from '@/modules/codespaces/api/api';
 // Mirrors the terminal's session view: a full-bleed, rounded container — but an iframe onto the
 // project's in-container code-server instead of an xterm. The API mints a short-lived ticket
 // (also booting code-server) which the same-origin proxy swaps for an httpOnly cookie.
-export const CodespaceView = ({ projectId }: { projectId: number }) => {
+// `folderPath` opens code-server at a specific workspace directory (e.g. a clicked file's parent);
+// it defaults to /workspace. The parent keys the pane by folderPath so navigating re-mounts here.
+export const CodespaceView = ({ projectId, folderPath }: { projectId: number; folderPath?: string }) => {
     const [src, setSrc] = useState<string | null>(null);
     const [failed, setFailed] = useState(false);
     const [attempt, setAttempt] = useState(0);
+    const folder = folderPath && folderPath.startsWith('/workspace') ? folderPath : '/workspace';
 
     useEffect(() => {
         let cancelled = false;
@@ -17,10 +20,10 @@ export const CodespaceView = ({ projectId }: { projectId: number }) => {
         codespaceApi.token(projectId)
             // ?folder loads the workspace directly, skipping code-server's bare-root 302; cc is
             // the one-time ticket the proxy swaps for a cookie then strips from the URL.
-            .then((ticket) => { if(!cancelled) setSrc(`${ticket.path}?folder=/workspace&cc=${encodeURIComponent(ticket.token)}`); })
+            .then((ticket) => { if(!cancelled) setSrc(`${ticket.path}?folder=${encodeURIComponent(folder)}&cc=${encodeURIComponent(ticket.token)}`); })
             .catch(() => { if(!cancelled) setFailed(true); });
         return () => { cancelled = true; };
-    }, [projectId, attempt]);
+    }, [projectId, folder, attempt]);
 
     return (
         <div className='flex h-full w-full min-w-0 flex-col overflow-hidden bg-[#1e1e1e]'>

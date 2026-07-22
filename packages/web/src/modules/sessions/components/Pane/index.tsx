@@ -105,7 +105,7 @@ export const Pane = ({ leaf }: { leaf: LeafNode }) => {
                 ) : content.kind === 'terminal' ? (
                     <TerminalView key={content.sessionId} sessionId={content.sessionId} paneId={leaf.id} />
                 ) : (
-                    <CodespaceView key={content.projectId} projectId={content.projectId} />
+                    <CodespaceView key={`${content.projectId}:${content.folderPath ?? ''}`} projectId={content.projectId} folderPath={content.folderPath} />
                 )}
             </div>
         </div>

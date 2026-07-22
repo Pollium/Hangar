@@ -7,7 +7,7 @@ import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRout
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import SandboxService from '../services/SandboxService';
 import { sandboxRoutes } from '@hangar/contracts/modules/sandbox/routes';
-import type { CloneRepoInput } from '@hangar/contracts/modules/sandbox/http';
+import type { CloneRepoInput, RenameFileInput, DeleteFileInput } from '@hangar/contracts/modules/sandbox/http';
 
 @Middleware(AuthenticatedRoute)
 export default class SandboxController extends BaseController{
@@ -52,6 +52,18 @@ export default class SandboxController extends BaseController{
     @Route(sandboxRoutes.git)
     git(@CurrentUser() userId: number, @NumericParam('projectId') projectId: number, @Query('repo') repo?: string){
         return this.#service.gitInfo(userId, projectId, repo);
+    }
+
+    @Route(sandboxRoutes.renameFile)
+    async renameFile(@CurrentUser() userId: number, @NumericParam('projectId') projectId: number, @Body() body: RenameFileInput){
+        await this.#service.renameFile(userId, projectId, body.path, body.to);
+        return { ok: true as const };
+    }
+
+    @Route(sandboxRoutes.deleteFile)
+    async deleteFile(@CurrentUser() userId: number, @NumericParam('projectId') projectId: number, @Body() body: DeleteFileInput){
+        await this.#service.deleteFile(userId, projectId, body.path);
+        return { ok: true as const };
     }
 
     @Route(sandboxRoutes.clone)
