@@ -14,36 +14,11 @@ const PRIORITY: Record<SessionStatus, number> = {
     stopped: 5
 };
 
-const GROUPS: Array<{
-    id: string;
-    title: string;
-    description: string;
-    statuses: SessionStatus[];
-}> = [
-    {
-        id: 'attention',
-        title: 'Needs attention',
-        description: 'Waiting for input or requiring recovery.',
-        statuses: ['waiting_input', 'error']
-    },
-    {
-        id: 'active',
-        title: 'In progress',
-        description: 'Agents currently starting or working.',
-        statuses: ['running', 'starting']
-    },
-    {
-        id: 'idle',
-        title: 'Idle',
-        description: 'Ready to continue when you are.',
-        statuses: ['idle']
-    },
-    {
-        id: 'history',
-        title: 'Stopped',
-        description: 'Sessions that are no longer running.',
-        statuses: ['stopped']
-    }
+const GROUPS: Array<{ id: string; title: string; statuses: SessionStatus[] }> = [
+    { id: 'attention', title: 'Needs attention', statuses: ['waiting_input', 'error'] },
+    { id: 'active', title: 'In progress', statuses: ['running', 'starting'] },
+    { id: 'idle', title: 'Idle', statuses: ['idle'] },
+    { id: 'history', title: 'Stopped', statuses: ['stopped'] }
 ];
 
 interface Props{
@@ -71,7 +46,7 @@ export const FleetGrid = ({ sessions, loading, error }: Props) => {
 
     if(error && sessions.length === 0){
         return (
-            <div role='alert' className='flex min-h-72 flex-col items-center justify-center gap-4 border-y border-danger/30 px-6 text-center'>
+            <div role='alert' className='flex min-h-72 flex-col items-center justify-center gap-4 rounded-xl border border-danger/30 px-6 text-center'>
                 <CircleAlert className='size-5 text-danger' aria-hidden='true' />
                 <div className='flex flex-col gap-1'>
                     <h2 className='text-sm font-medium text-foreground'>Fleet could not be loaded</h2>
@@ -114,28 +89,22 @@ export const FleetGrid = ({ sessions, loading, error }: Props) => {
     }
 
     return (
-        <div className='flex flex-col gap-9' aria-busy={loading}>
+        <div className='flex flex-col gap-8' aria-busy={loading}>
             {loading && <span className='sr-only' role='status'>Refreshing fleet data</span>}
             {GROUPS.map((group) => {
                 const grouped = ordered.filter((session) => group.statuses.includes(session.status));
                 if(grouped.length === 0) return null;
                 const headingId = `fleet-group-${group.id}`;
                 return (
-                    <section key={group.id} aria-labelledby={headingId} className='flex flex-col gap-3'>
-                        <div className='flex items-end justify-between gap-4'>
-                            <div className='flex flex-col gap-0.5'>
-                                <h2 id={headingId} className='text-sm font-semibold text-foreground'>{group.title}</h2>
-                                <p className='text-xs text-muted'>{group.description}</p>
-                            </div>
-                            <span className='mono-label text-muted' aria-label={`${grouped.length} sessions`}>{grouped.length}</span>
+                    <section key={group.id} aria-labelledby={headingId} className='flex flex-col'>
+                        <div className='flex items-center gap-3 pb-1'>
+                            <h2 id={headingId} className='mono-label shrink-0 text-muted'>{group.title}</h2>
+                            <span className='h-px flex-1 bg-[var(--hairline)]' aria-hidden='true' />
+                            <span className='shrink-0 text-xs tabular-nums text-muted/70' aria-label={`${grouped.length} sessions`}>{grouped.length}</span>
                         </div>
-                        <div className='grid grid-cols-1 gap-3 xl:grid-cols-2'>
+                        <div className='grid grid-cols-1 gap-x-8 xl:grid-cols-2'>
                             {grouped.map((session) => (
-                                <SessionCard
-                                    key={session.id}
-                                    session={session}
-                                    now={now}
-                                />
+                                <SessionCard key={session.id} session={session} now={now} />
                             ))}
                         </div>
                     </section>

@@ -1,12 +1,6 @@
-import { useMemo, type ComponentType } from 'react';
+import { useMemo } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import {
-    Activity,
-    AlertTriangle,
-    CircleAlert,
-    Clock3,
-    Plus
-} from 'lucide-react';
+import { CircleAlert, Plus } from 'lucide-react';
 import { AppShell } from '@/modules/sessions/components/AppShell';
 import { Canvas, Row } from '@/shared/components/ui/Blueprint';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
@@ -17,19 +11,16 @@ import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModa
 interface MetricProps{
     label: string;
     value: number | string;
-    icon: ComponentType<{ className?: string }>;
-    tone: string;
+    /** Accent bar + active value color. */
+    accent: string;
+    active: boolean;
 }
 
-const Metric = ({ label, value, icon: Icon, tone }: MetricProps) => (
-    <div className='flex items-center justify-between gap-4 bg-background px-5 py-5 sm:px-6'>
-        <div className='flex flex-col gap-1'>
-            <span className='text-2xl font-semibold tracking-tight text-foreground'>{value}</span>
-            <span className='text-xs text-muted'>{label}</span>
-        </div>
-        <span className={`grid size-9 place-items-center rounded-xl ${tone}`} aria-hidden='true'>
-            <Icon className='size-4' />
-        </span>
+const Metric = ({ label, value, accent, active }: MetricProps) => (
+    <div className='flex flex-col gap-2 px-5 py-5 sm:px-6'>
+        <span className={`h-0.5 w-8 rounded-full ${active ? accent : 'bg-foreground/10'}`} aria-hidden='true' />
+        <span className={`text-3xl font-semibold tracking-tight tabular-nums ${active ? 'text-foreground' : 'text-muted/70'}`}>{value}</span>
+        <span className='text-xs text-muted'>{label}</span>
     </div>
 );
 
@@ -64,30 +55,26 @@ const Overview = () => {
                     />
                 </Row>
 
-                <Row max='max-w-6xl'>
-                    <div className='grid grid-cols-2 gap-px bg-[var(--hairline)] lg:grid-cols-4' aria-busy={loading}>
-                        <Metric label='Needs input' value={metricValue(counts.attention)} icon={AlertTriangle} tone='bg-warning/10 text-foreground' />
-                        <Metric label='Active now' value={metricValue(counts.active)} icon={Activity} tone='bg-success/10 text-foreground' />
-                        <Metric label='Idle' value={metricValue(counts.idle)} icon={Clock3} tone='bg-foreground/[0.05] text-foreground' />
-                        <Metric label='Errors' value={metricValue(counts.error)} icon={CircleAlert} tone='bg-danger/10 text-foreground' />
+                <Row max='max-w-6xl' className='mt-10'>
+                    <div className='grid grid-cols-2 divide-x divide-[var(--hairline)] overflow-hidden rounded-xl border border-hairline lg:grid-cols-4' aria-busy={loading}>
+                        <Metric label='Needs input' value={metricValue(counts.attention)} accent='bg-warning' active={counts.attention > 0} />
+                        <Metric label='Active now' value={metricValue(counts.active)} accent='bg-success' active={counts.active > 0} />
+                        <Metric label='Idle' value={metricValue(counts.idle)} accent='bg-foreground/40' active={counts.idle > 0} />
+                        <Metric label='Errors' value={metricValue(counts.error)} accent='bg-danger' active={counts.error > 0} />
                     </div>
                 </Row>
 
                 {error && (
                     <Row max='max-w-6xl'>
-                        <div role='alert' className='flex items-center gap-2 border-l-2 border-danger bg-danger/10 px-5 py-3 text-xs text-foreground sm:px-8'>
-                            <CircleAlert className='size-4 shrink-0' aria-hidden='true' />
+                        <div role='alert' className='mt-3 flex items-center gap-2 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-xs text-foreground'>
+                            <CircleAlert className='size-4 shrink-0 text-danger' aria-hidden='true' />
                             Fleet updates are unavailable: {error} Existing data may be stale.
                         </div>
                     </Row>
                 )}
 
-                <Row grow max='max-w-6xl' className='mt-2'>
-                    <FleetGrid
-                        sessions={sessions}
-                        loading={loading}
-                        error={error}
-                    />
+                <Row grow max='max-w-6xl' className='mt-10'>
+                    <FleetGrid sessions={sessions} loading={loading} error={error} />
                 </Row>
             </Canvas>
         </AppShell>
