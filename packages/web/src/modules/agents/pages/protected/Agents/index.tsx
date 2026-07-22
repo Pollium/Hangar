@@ -82,32 +82,47 @@ const AgentsPage = () => {
                             description='Connect a VPS to run projects. Without one, sessions and codespaces cannot start.'
                         />
                     ) : (
-                        <ul className='flex flex-col gap-3'>
-                            {agents.map((agent) => (
-                                <li key={agent.id} className='flex items-center justify-between gap-4 rounded-xl border border-hairline bg-surface px-4 py-3'>
-                                    <div className='flex min-w-0 items-center gap-3'>
-                                        <span className='grid size-9 shrink-0 place-items-center rounded-full border border-hairline text-muted' aria-hidden='true'>
-                                            <Server className='size-4' />
-                                        </span>
-                                        <div className='flex min-w-0 flex-col'>
-                                            <span className='truncate text-sm font-medium text-foreground'>{agent.name}</span>
-                                            <span className='flex items-center gap-1.5 text-xs text-muted'>
-                                                <span className={`size-1.5 rounded-full ${agent.status === 'online' ? 'bg-success' : 'bg-foreground/25'}`} aria-hidden='true' />
-                                                {agent.status === 'online' ? 'Online' : 'Offline'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        type='button'
-                                        onClick={() => remove(agent.id)}
-                                        aria-label={`Remove ${agent.name}`}
-                                        className='grid size-7 shrink-0 place-items-center rounded-md text-muted transition-colors hover:text-danger'
-                                    >
-                                        <Trash2 className='size-4' aria-hidden='true' />
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                        <div className='overflow-hidden rounded-xl border border-hairline'>
+                            <table className='w-full border-collapse text-sm'>
+                                <thead>
+                                    <tr className='border-b border-hairline bg-foreground/[0.02] text-left'>
+                                        <th scope='col' className='px-4 py-2.5 font-medium text-muted'>Name</th>
+                                        <th scope='col' className='px-4 py-2.5 font-medium text-muted'>Status</th>
+                                        <th scope='col' className='hidden px-4 py-2.5 font-medium text-muted sm:table-cell'>Last seen</th>
+                                        <th scope='col' className='w-12 px-4 py-2.5'><span className='sr-only'>Actions</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {agents.map((agent) => (
+                                        <tr key={agent.id} className='border-b border-hairline transition-colors last:border-b-0 hover:bg-foreground/[0.02]'>
+                                            <td className='px-4 py-2.5'>
+                                                <div className='flex min-w-0 items-center gap-2.5'>
+                                                    <Server className='size-3.5 shrink-0 text-muted' aria-hidden='true' />
+                                                    <span className='min-w-0 truncate font-medium text-foreground'>{agent.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className='px-4 py-2.5'>
+                                                <span className='flex items-center gap-1.5 text-xs text-muted'>
+                                                    <span className={`size-1.5 rounded-full ${agent.status === 'online' ? 'bg-success' : 'bg-foreground/25'}`} aria-hidden='true' />
+                                                    {agent.status === 'online' ? 'Online' : 'Offline'}
+                                                </span>
+                                            </td>
+                                            <td className='hidden whitespace-nowrap px-4 py-2.5 text-xs text-muted sm:table-cell'>{lastSeen(agent.lastSeenAt)}</td>
+                                            <td className='px-4 py-2.5 text-right'>
+                                                <button
+                                                    type='button'
+                                                    onClick={() => remove(agent.id)}
+                                                    aria-label={`Remove ${agent.name}`}
+                                                    className='grid size-7 shrink-0 place-items-center rounded-md text-muted transition-colors hover:text-danger'
+                                                >
+                                                    <Trash2 className='size-4' aria-hidden='true' />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </Row>
             </Canvas>
