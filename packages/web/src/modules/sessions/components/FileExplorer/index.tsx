@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction, ReactNode } from 'react';
 import { ScrollShadow } from '@heroui/react';
-import { ChevronRight, ChevronDown, Folder, File as FileIcon, FolderGit2, RefreshCw, LoaderCircle, SquareArrowOutUpRight, Pencil, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, File as FileIcon, FolderGit2, RefreshCw, LoaderCircle, SquareArrowOutUpRight, Pencil, Trash2, FilePlus, FolderPlus, Search } from 'lucide-react';
 import { sandboxApi } from '@/modules/projects/api/api';
 import { useActiveProjectStore } from '@/modules/projects/store/activeProject';
 import { useCloneRepoModalStore } from '@/modules/projects/store/cloneRepoModal';
 import { useFileExplorerStore } from '@/modules/sessions/store/fileExplorer';
+import { useFileSearchStore } from '@/modules/sessions/store/fileSearch';
 import { useWorkspaceStore } from '@/modules/sessions/store/workspace';
 import { SidebarSection } from '@/modules/sessions/components/SidebarSection';
+import { PromptModal } from '@/shared/components/PromptModal';
+import { ConfirmModal } from '@/shared/components/ConfirmModal';
+import { toast } from '@/shared/store/toast';
 import type { FileEntry } from '@hangar/contracts/modules/sandbox/domain';
 
 const WORKSPACE = '/workspace';
@@ -20,12 +24,18 @@ const parentDir = (path: string): string => {
     return parent.startsWith(WORKSPACE) ? parent : WORKSPACE;
 };
 
+const errText = (err: unknown, fallback: string): string => err instanceof Error ? err.message : fallback;
+
 interface Menu{ entry: FileEntry; x: number; y: number; }
+// A pending create: which directory to create in, and whether a file or folder.
+interface CreateTarget{ dir: string; type: 'file' | 'dir'; }
 
 export const FileExplorer = () => {
     const activeProjectId = useActiveProjectStore((state) => state.activeProjectId);
     const refreshToken = useFileExplorerStore((state) => state.refreshToken);
+    const softToken = useFileExplorerStore((state) => state.softToken);
     const openClone = useCloneRepoModalStore((state) => state.open);
+    const openSearch = useFileSearchStore((state) => state.open);
     const openCodespaceAt = useWorkspaceStore((state) => state.openCodespaceAt);
 
     const [childrenByPath, setChildrenByPath] = useState<Record<string, FileEntry[]>>({});
@@ -33,7 +43,9 @@ export const FileExplorer = () => {
     const [loadingPaths, setLoadingPaths] = useState<Set<string>>(new Set());
     const [rootState, setRootState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
     const [menu, setMenu] = useState<Menu | null>(null);
-    const [busy, setBusy] = useState(false);
+    const [renaming, setRenaming] = useState<FileEntry | null>(null);
+    const [deleting, setDeleting] = useState<FileEntry | null>(null);
+    const [creating, setCreating] = useState<CreateTarget | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
     const mark = (setter: Dispatch<SetStateAction<Set<string>>>, path: string, on: boolean) =>
@@ -69,6 +81,16 @@ export const FileExplorer = () => {
         return () => { cancelled = true; };
     }, [activeProjectId, refreshToken, load]);
 
+    // Soft refresh (poller): re-fetch the root and every expanded directory in place, without
+    // collapsing the tree, so externally-made changes surface unobtrusively.
+    useEffect(() => {
+        if(softToken === 0 || activeProjectId === null) return;
+        void load(activeProjectId, WORKSPACE);
+        for(const path of expanded) void load(activeProjectId, path);
+        // `expanded` intentionally omitted: we snapshot it when the poll fires, not on every toggle.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [softToken, activeProjectId, load]);
+
     // Dismiss the context menu on any outside click, scroll, or Escape.
     useEffect(() => {
         if(!menu) return;
@@ -95,32 +117,44 @@ export const FileExplorer = () => {
         openCodespaceAt(activeProjectId, entry.type === 'dir' ? entry.path : parentDir(entry.path));
     };
 
-    const rename = async (entry: FileEntry) => {
-        if(activeProjectId === null) return;
-        const nextName = window.prompt(`Rename "${entry.name}" to:`, entry.name)?.trim();
-        if(!nextName || nextName === entry.name || nextName.includes('/')) return;
-        setBusy(true);
+    // --- mutations (modal-driven; each returns an error string to keep its modal open) ---
+
+    const submitRename = async (nextName: string): Promise<string | null> => {
+        if(activeProjectId === null || !renaming) return 'No project selected.';
+        if(nextName.includes('/')) return 'Name cannot contain "/".';
+        if(nextName === renaming.name) return null;
         try{
-            await sandboxApi.renameFile(activeProjectId, { path: entry.path, to: `${parentDir(entry.path)}/${nextName}` });
+            await sandboxApi.renameFile(activeProjectId, { path: renaming.path, to: `${parentDir(renaming.path)}/${nextName}` });
             useFileExplorerStore.getState().requestRefresh();
+            toast.success(`Renamed to ${nextName}`);
+            return null;
         }catch(err){
-            window.alert(err instanceof Error ? err.message : 'Rename failed.');
-        }finally{
-            setBusy(false);
+            return errText(err, 'Rename failed.');
         }
     };
 
-    const remove = async (entry: FileEntry) => {
-        if(activeProjectId === null) return;
-        if(!window.confirm(`Delete "${entry.name}"? This cannot be undone.`)) return;
-        setBusy(true);
+    const submitDelete = async (): Promise<string | null> => {
+        if(activeProjectId === null || !deleting) return 'No project selected.';
         try{
-            await sandboxApi.deleteFile(activeProjectId, { path: entry.path });
+            await sandboxApi.deleteFile(activeProjectId, { path: deleting.path });
             useFileExplorerStore.getState().requestRefresh();
+            toast.success(`Deleted ${deleting.name}`);
+            return null;
         }catch(err){
-            window.alert(err instanceof Error ? err.message : 'Delete failed.');
-        }finally{
-            setBusy(false);
+            return errText(err, 'Delete failed.');
+        }
+    };
+
+    const submitCreate = async (name: string): Promise<string | null> => {
+        if(activeProjectId === null || !creating) return 'No project selected.';
+        if(name.includes('/')) return 'Name cannot contain "/".';
+        try{
+            await sandboxApi.createFile(activeProjectId, { path: `${creating.dir}/${name}`, type: creating.type });
+            useFileExplorerStore.getState().requestRefresh();
+            toast.success(`Created ${name}`);
+            return null;
+        }catch(err){
+            return errText(err, 'Create failed.');
         }
     };
 
@@ -165,6 +199,7 @@ export const FileExplorer = () => {
     });
 
     const roots = childrenByPath[WORKSPACE] ?? [];
+    const menuDir = menu ? (menu.entry.type === 'dir' ? menu.entry.path : parentDir(menu.entry.path)) : WORKSPACE;
 
     return (
         <>
@@ -173,6 +208,36 @@ export const FileExplorer = () => {
                 title='Explorer'
                 actions={
                     <>
+                        <button
+                            type='button'
+                            onClick={openSearch}
+                            disabled={activeProjectId === null}
+                            className={iconBtn}
+                            aria-label='Find file'
+                            title='Find file (⌘P)'
+                        >
+                            <Search className='size-3.5' aria-hidden='true' />
+                        </button>
+                        <button
+                            type='button'
+                            onClick={() => setCreating({ dir: WORKSPACE, type: 'file' })}
+                            disabled={activeProjectId === null}
+                            className={iconBtn}
+                            aria-label='New file'
+                            title='New file'
+                        >
+                            <FilePlus className='size-3.5' aria-hidden='true' />
+                        </button>
+                        <button
+                            type='button'
+                            onClick={() => setCreating({ dir: WORKSPACE, type: 'dir' })}
+                            disabled={activeProjectId === null}
+                            className={iconBtn}
+                            aria-label='New folder'
+                            title='New folder'
+                        >
+                            <FolderPlus className='size-3.5' aria-hidden='true' />
+                        </button>
                         <button type='button' onClick={openClone} className={iconBtn} aria-label='Clone repository' title='Clone repository'>
                             <FolderGit2 className='size-3.5' aria-hidden='true' />
                         </button>
@@ -184,7 +249,7 @@ export const FileExplorer = () => {
                             aria-label='Refresh files'
                             title='Refresh files'
                         >
-                            <RefreshCw className={`size-3.5 ${rootState === 'loading' || busy ? 'animate-spin' : ''}`} aria-hidden='true' />
+                            <RefreshCw className={`size-3.5 ${rootState === 'loading' ? 'animate-spin' : ''}`} aria-hidden='true' />
                         </button>
                     </>
                 }
@@ -210,7 +275,7 @@ export const FileExplorer = () => {
                 <div
                     ref={menuRef}
                     role='menu'
-                    className='fixed z-50 min-w-44 overflow-hidden rounded-md border border-hairline bg-surface py-1 shadow-lg'
+                    className='fixed z-50 min-w-48 overflow-hidden rounded-md border border-hairline bg-surface py-1 shadow-lg'
                     style={{ top: menu.y, left: menu.x }}
                 >
                     <button
@@ -224,7 +289,24 @@ export const FileExplorer = () => {
                     <button
                         type='button'
                         role='menuitem'
-                        onClick={() => { const e = menu.entry; setMenu(null); void rename(e); }}
+                        onClick={() => { setMenu(null); setCreating({ dir: menuDir, type: 'file' }); }}
+                        className='flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] text-foreground transition-colors hover:bg-foreground/[0.06]'
+                    >
+                        <FilePlus className='size-3.5 text-muted' aria-hidden='true' /> New File
+                    </button>
+                    <button
+                        type='button'
+                        role='menuitem'
+                        onClick={() => { setMenu(null); setCreating({ dir: menuDir, type: 'dir' }); }}
+                        className='flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] text-foreground transition-colors hover:bg-foreground/[0.06]'
+                    >
+                        <FolderPlus className='size-3.5 text-muted' aria-hidden='true' /> New Folder
+                    </button>
+                    <div className='my-1 border-t border-hairline' />
+                    <button
+                        type='button'
+                        role='menuitem'
+                        onClick={() => { const e = menu.entry; setMenu(null); setRenaming(e); }}
                         className='flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] text-foreground transition-colors hover:bg-foreground/[0.06]'
                     >
                         <Pencil className='size-3.5 text-muted' aria-hidden='true' /> Rename
@@ -232,13 +314,43 @@ export const FileExplorer = () => {
                     <button
                         type='button'
                         role='menuitem'
-                        onClick={() => { const e = menu.entry; setMenu(null); void remove(e); }}
+                        onClick={() => { const e = menu.entry; setMenu(null); setDeleting(e); }}
                         className='flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] text-danger transition-colors hover:bg-danger/[0.08]'
                     >
                         <Trash2 className='size-3.5' aria-hidden='true' /> Delete
                     </button>
                 </div>
             )}
+
+            <PromptModal
+                isOpen={renaming !== null}
+                title='Rename'
+                label='New name'
+                initialValue={renaming?.name ?? ''}
+                confirmLabel='Rename'
+                onSubmit={submitRename}
+                onClose={() => setRenaming(null)}
+            />
+
+            <PromptModal
+                isOpen={creating !== null}
+                title={creating?.type === 'dir' ? 'New folder' : 'New file'}
+                label={creating?.type === 'dir' ? 'Folder name' : 'File name'}
+                placeholder={creating?.type === 'dir' ? 'components' : 'index.ts'}
+                confirmLabel='Create'
+                onSubmit={submitCreate}
+                onClose={() => setCreating(null)}
+            />
+
+            <ConfirmModal
+                isOpen={deleting !== null}
+                title='Delete'
+                message={`Delete "${deleting?.name}"? This cannot be undone.`}
+                confirmLabel='Delete'
+                danger
+                onConfirm={submitDelete}
+                onClose={() => setDeleting(null)}
+            />
         </>
     );
 };

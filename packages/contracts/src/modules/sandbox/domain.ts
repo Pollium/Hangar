@@ -51,16 +51,37 @@ export interface GitCommit{
     date: string;
 }
 
+/** One changed path in the working tree, as reported by `git status --porcelain`. */
+export interface GitChange{
+    /** Path relative to the repo root, e.g. src/index.ts. */
+    path: string;
+    /**
+     * Two-letter porcelain code (index + worktree), e.g. ' M', 'A ', '??', 'MM'.
+     * The UI derives a human label/staged flag from it.
+     */
+    code: string;
+    /** True when the change (or part of it) is staged in the index. */
+    staged: boolean;
+    /** True for untracked files ('??'). */
+    untracked: boolean;
+}
+
 /**
- * Source-control view of one workspace repo (a /workspace subdirectory that is a git repo).
- * `slug` is the subdirectory name; `branch` is the checked-out branch (null on a detached HEAD
- * or empty repo).
+ * Source-control view of one workspace repo (a git repo found under /workspace).
+ * `slug` is the repo's path relative to /workspace (may be nested, e.g. `apps/web`);
+ * `branch` is the checked-out branch (null on a detached HEAD or empty repo).
+ * `ahead`/`behind` count commits vs the upstream (0 when there is no upstream).
  */
 export interface GitRepoInfo{
     slug: string;
     branch: string | null;
+    /** Upstream tracking branch (e.g. origin/main), or null when none is configured. */
+    upstream: string | null;
+    ahead: number;
+    behind: number;
     branches: GitBranch[];
     commits: GitCommit[];
+    changes: GitChange[];
 }
 
 /**

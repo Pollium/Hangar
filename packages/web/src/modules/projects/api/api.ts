@@ -6,7 +6,7 @@ import { sandboxRoutes } from '@hangar/contracts/modules/sandbox/routes';
 import { cliRoutes } from '@hangar/contracts/modules/cli/routes';
 import { githubRoutes } from '@hangar/contracts/modules/github/routes';
 import type { AddProjectRepositoryInput, CreateProjectInput, UpdateProjectInput } from '@hangar/contracts/modules/project/http';
-import type { CloneRepoInput, RenameFileInput, DeleteFileInput } from '@hangar/contracts/modules/sandbox/http';
+import type { CloneRepoInput, RenameFileInput, DeleteFileInput, CreateFileInput, GitRepoInput, GitCheckoutInput } from '@hangar/contracts/modules/sandbox/http';
 
 // The default 30s GET cache would otherwise serve a stale, pre-membership-change project list
 // to the next refresh() right after creating/joining/leaving a project.
@@ -43,9 +43,15 @@ export const sandboxApi = {
     stop: (projectId: number) => call(sandboxRoutes.stop, { path: { projectId } }),
     destroy: (projectId: number) => call(sandboxRoutes.destroy, { path: { projectId } }),
     files: (projectId: number, path?: string) => call(sandboxRoutes.files, { path: { projectId }, query: path ? { path } : {} }),
+    search: (projectId: number, q: string) => call(sandboxRoutes.search, { path: { projectId }, query: { q } }),
     git: (projectId: number, repo?: string) => call(sandboxRoutes.git, { path: { projectId }, query: repo ? { repo } : {} }),
     renameFile: (projectId: number, body: RenameFileInput) => call(sandboxRoutes.renameFile, { path: { projectId }, body }),
     deleteFile: (projectId: number, body: DeleteFileInput) => call(sandboxRoutes.deleteFile, { path: { projectId }, body }),
+    createFile: (projectId: number, body: CreateFileInput) => call(sandboxRoutes.createFile, { path: { projectId }, body }),
+    gitPull: (projectId: number, body: GitRepoInput) => call(sandboxRoutes.gitPull, { path: { projectId }, body }),
+    gitPush: (projectId: number, body: GitRepoInput) => call(sandboxRoutes.gitPush, { path: { projectId }, body }),
+    gitFetch: (projectId: number, body: GitRepoInput) => call(sandboxRoutes.gitFetch, { path: { projectId }, body }),
+    gitCheckout: (projectId: number, body: GitCheckoutInput) => call(sandboxRoutes.gitCheckout, { path: { projectId }, body }),
     clone: (projectId: number, body: CloneRepoInput) => call(sandboxRoutes.clone, { path: { projectId }, body })
 };
 

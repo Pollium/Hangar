@@ -11,7 +11,7 @@ import Sandbox from '../models/Sandbox';
 import SandboxProvisioner from './SandboxProvisioner';
 import { repoSlug } from './repoSlug';
 import { SandboxError } from '../contracts/domain/errors';
-import type { SandboxUsage, FileEntry, GitInfo, GitBranch, GitCommit } from '@hangar/contracts/modules/sandbox/domain';
+import type { SandboxUsage, FileEntry, GitInfo, GitRepoInfo, GitBranch, GitCommit, GitChange } from '@hangar/contracts/modules/sandbox/domain';
 
 const WORKSPACE = '/workspace';
 
@@ -187,6 +187,57 @@ export default class SandboxService{
     }
 
     /**
+     * Creates a new empty file or directory in the workspace. Confined to /workspace. Parent
+     * directories are created as needed. Runs as argv (mkdir -p / touch). Refuses to clobber an
+     * existing path so a "New file" never truncates real content.
+     */
+    async createEntry(userId: number, projectId: number, path: string, type: 'file' | 'dir'): Promise<void>{
+        const target = this.#resolveWorkspacePath(path);
+
+        const { handle } = await this.ensureRunning(userId, projectId);
+        const existing = await handle.exec(['test', '-e', target]);
+        if(existing.exitCode === 0) throw SandboxError.FileOperationFailed('A file or folder with that name already exists.');
+
+        if(type === 'dir'){
+            const made = await handle.exec(['mkdir', '-p', '--', target]);
+            if(made.exitCode !== 0) throw SandboxError.FileOperationFailed(made.output.split('\n').filter(Boolean).pop() || 'create failed');
+            return;
+        }
+        // Ensure the parent dir exists, then touch the file — as two argv steps, no shell.
+        const parent = pathPosix.dirname(target);
+        await handle.exec(['mkdir', '-p', '--', parent]);
+        const made = await handle.exec(['touch', '--', target]);
+        if(made.exitCode !== 0) throw SandboxError.FileOperationFailed(made.output.split('\n').filter(Boolean).pop() || 'create failed');
+    }
+
+    /**
+     * Recursive file search across the workspace: returns files whose path contains the query
+     * (case-insensitive), capped for responsiveness. Prunes node_modules and .git. Runs `find` as
+     * argv; the query is matched in JS (never interpolated into the command) so it can't inject.
+     */
+    async searchFiles(userId: number, projectId: number, query?: string): Promise<FileEntry[]>{
+        const needle = query?.trim().toLowerCase();
+        if(!needle) return [];
+
+        const { handle } = await this.ensureRunning(userId, projectId);
+        const found = await handle.exec([
+            'find', WORKSPACE,
+            '(', '-name', 'node_modules', '-o', '-name', '.git', ')', '-prune',
+            '-o', '-type', 'f', '-print'
+        ]);
+        if(found.exitCode !== 0) return [];
+
+        const results: FileEntry[] = [];
+        for(const full of found.output.split('\n')){
+            if(!full || !full.startsWith(`${WORKSPACE}/`)) continue;
+            if(!full.toLowerCase().includes(needle)) continue;
+            results.push({ name: full.slice(full.lastIndexOf('/') + 1), path: full, type: 'file' });
+            if(results.length >= 100) break;
+        }
+        return results;
+    }
+
+    /**
      * Source-control view of the workspace: every git repo under /workspace (by subdirectory
      * slug) and, for the requested `repo` (defaulting to the first), its branches and recent
      * commits. Auto-starts the sandbox. All `git` invocations run as argv with an explicit
@@ -196,32 +247,72 @@ export default class SandboxService{
      */
     async gitInfo(userId: number, projectId: number, requestedRepo?: string): Promise<GitInfo>{
         const { handle } = await this.ensureRunning(userId, projectId);
+        const repos = await this.#discoverRepos(handle);
 
-        // Discover every git repo in the workspace at ANY depth (not just direct children of
-        // /workspace): a directory named `.git` marks a repo root. Prune node_modules (vendored
-        // deps sometimes ship a .git, and it's a needless perf sink) and don't descend into the
-        // .git dirs themselves. Submodule/worktree `.git` *files* (-type d excludes them) aren't
-        // treated as separate repos — they belong to their parent.
+        const slug = requestedRepo && repos.includes(requestedRepo) ? requestedRepo : repos[0];
+        if(!slug) return { repos, selected: null };
+        return { repos, selected: await this.#repoDetail(handle, slug) };
+    }
+
+    /**
+     * Discovers every git repo in the workspace at ANY depth (not just direct children of
+     * /workspace): a directory named `.git` marks a repo root. Prunes node_modules (vendored deps
+     * sometimes ship a .git, and it's a needless perf sink) and doesn't descend into the .git dirs
+     * themselves. Submodule/worktree `.git` *files* (-type d excludes them) aren't treated as
+     * separate repos — they belong to their parent. Returns repo paths relative to /workspace.
+     */
+    async #discoverRepos(handle: IContainerHandle): Promise<string[]>{
         const found = await handle.exec(['find', WORKSPACE, '-name', 'node_modules', '-prune', '-o', '-type', 'd', '-name', '.git', '-prune', '-print']);
-        const repos = (found.exitCode === 0 ? found.output.split('\n') : [])
+        return (found.exitCode === 0 ? found.output.split('\n') : [])
             .filter(Boolean)
             // /workspace/a/b/.git -> "a/b" (the repo's path relative to the workspace root).
             .map((gitDir) => gitDir.replace(/\/\.git$/, '').slice(WORKSPACE.length + 1))
             .filter(Boolean)
             .sort((a, b) => a.localeCompare(b));
+    }
 
-        const slug = requestedRepo && repos.includes(requestedRepo) ? requestedRepo : repos[0];
-        if(!slug) return { repos, selected: null };
+    /**
+     * Resolves a client-supplied repo id to an absolute path, but ONLY if it is a repo actually
+     * discovered in the workspace — an unknown/crafted value is rejected, so the id can never point
+     * outside /workspace regardless of its contents.
+     */
+    async #resolveRepo(handle: IContainerHandle, repo: string): Promise<string>{
+        const repos = await this.#discoverRepos(handle);
+        if(!repos.includes(repo)) throw SandboxError.InvalidPath();
+        return `${WORKSPACE}/${repo}`;
+    }
 
+    /**
+     * Reads a single repo's source-control detail: current branch, upstream + ahead/behind,
+     * local/remote branches, recent commits, and working-tree changes. All `git` calls run as argv
+     * with an explicit `-C <repoPath>` (never a shell). A repo with no commits reads as empty
+     * history rather than an error.
+     */
+    async #repoDetail(handle: IContainerHandle, slug: string): Promise<GitRepoInfo>{
         const repoPath = `${WORKSPACE}/${slug}`;
-        const [branchRes, refsRes, logRes] = await Promise.all([
+        const [branchRes, upstreamRes, refsRes, logRes, statusRes] = await Promise.all([
             handle.exec(['git', '-C', repoPath, 'rev-parse', '--abbrev-ref', 'HEAD']),
+            handle.exec(['git', '-C', repoPath, 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}']),
             handle.exec(['git', '-C', repoPath, 'for-each-ref', '--format=%(refname)%09%(HEAD)', 'refs/heads', 'refs/remotes']),
-            handle.exec(['git', '-C', repoPath, 'log', '-n', '50', '--format=%h%x09%an%x09%aI%x09%s'])
+            handle.exec(['git', '-C', repoPath, 'log', '-n', '50', '--format=%h%x09%an%x09%aI%x09%s']),
+            handle.exec(['git', '-C', repoPath, 'status', '--porcelain'])
         ]);
 
         const rawBranch = branchRes.exitCode === 0 ? branchRes.output.trim() : '';
         const branch = rawBranch && rawBranch !== 'HEAD' ? rawBranch : null;
+        const upstream = upstreamRes.exitCode === 0 ? (upstreamRes.output.trim() || null) : null;
+
+        // ahead/behind vs upstream (only meaningful when an upstream exists).
+        let ahead = 0;
+        let behind = 0;
+        if(upstream){
+            const counts = await handle.exec(['git', '-C', repoPath, 'rev-list', '--left-right', '--count', `${upstream}...HEAD`]);
+            if(counts.exitCode === 0){
+                const [b = '0', a = '0'] = counts.output.trim().split(/\s+/);
+                behind = Number(b) || 0;
+                ahead = Number(a) || 0;
+            }
+        }
 
         const branches: GitBranch[] = (refsRes.exitCode === 0 ? refsRes.output.split('\n') : [])
             .filter(Boolean)
@@ -243,7 +334,77 @@ export default class SandboxService{
                 return { hash, author, date, subject: rest.join('\t') };
             });
 
-        return { repos, selected: { slug, branch, branches, commits } };
+        // Porcelain v1: 2 status chars, a space, then the path (rename shows "old -> new").
+        const changes: GitChange[] = (statusRes.exitCode === 0 ? statusRes.output.split('\n') : [])
+            .filter((line) => line.length > 3)
+            .map((line): GitChange => {
+                const code = line.slice(0, 2);
+                const rest = line.slice(3);
+                const path = rest.includes(' -> ') ? rest.split(' -> ')[1] : rest;
+                const untracked = code === '??';
+                // Left column = index (staged); ' ' or '?' means not staged.
+                const staged = !untracked && code[0] !== ' ' && code[0] !== '?';
+                return { path, code, staged, untracked };
+            });
+
+        return { slug, branch, upstream, ahead, behind, branches, commits, changes };
+    }
+
+    /** Pulls the selected repo (ff/merge), authenticating private remotes with the owner's token. */
+    async gitPull(userId: number, projectId: number, repo: string): Promise<GitInfo>{
+        return this.#gitAction(userId, projectId, repo, (handle, repoPath, env) =>
+            handle.exec(['git', '-C', repoPath, 'pull', '--ff'], { env }));
+    }
+
+    /** Pushes the selected repo's current branch to its upstream, authenticating with the token. */
+    async gitPush(userId: number, projectId: number, repo: string): Promise<GitInfo>{
+        return this.#gitAction(userId, projectId, repo, (handle, repoPath, env) =>
+            handle.exec(['git', '-C', repoPath, 'push'], { env }));
+    }
+
+    /** Fetches all remotes (with prune) for the selected repo. */
+    async gitFetch(userId: number, projectId: number, repo: string): Promise<GitInfo>{
+        return this.#gitAction(userId, projectId, repo, (handle, repoPath, env) =>
+            handle.exec(['git', '-C', repoPath, 'fetch', '--all', '--prune'], { env }));
+    }
+
+    /**
+     * Checks out an existing branch. A remote branch name (origin/foo) is checked out as a local
+     * tracking branch (foo) via `git checkout <foo>`, which git resolves to the remote when no
+     * local branch exists. The branch name is passed as argv.
+     */
+    async gitCheckout(userId: number, projectId: number, repo: string, branch: string): Promise<GitInfo>{
+        const name = branch.trim();
+        if(!name) throw SandboxError.InvalidPath();
+        // origin/feature -> feature (let git set up tracking); a plain local name passes through.
+        const local = name.replace(/^[^/]+\//, '');
+        return this.#gitAction(userId, projectId, repo, (handle, repoPath) =>
+            handle.exec(['git', '-C', repoPath, 'checkout', local]));
+    }
+
+    /**
+     * Shared runner for git write actions: resolves+validates the repo, injects the owner's
+     * GITHUB_TOKEN through the process env (never persisted to the volume) so private remotes
+     * authenticate, runs the action, and returns the repo's refreshed detail. A non-zero exit
+     * surfaces the last stderr line as a FileOperationFailed cause.
+     */
+    async #gitAction(
+        userId: number,
+        projectId: number,
+        repo: string,
+        action: (handle: IContainerHandle, repoPath: string, env: string[]) => Promise<{ exitCode: number; output: string }>
+    ): Promise<GitInfo>{
+        const { handle } = await this.ensureRunning(userId, projectId);
+        const repoPath = await this.#resolveRepo(handle, repo);
+        const env = await this.#credentials.resolveEnvFor(userId, ['GITHUB_TOKEN']);
+
+        const result = await action(handle, repoPath, env);
+        if(result.exitCode !== 0){
+            throw SandboxError.FileOperationFailed(result.output.split('\n').filter(Boolean).pop() || 'git action failed');
+        }
+
+        const repos = await this.#discoverRepos(handle);
+        return { repos, selected: await this.#repoDetail(handle, repo) };
     }
 
     /**

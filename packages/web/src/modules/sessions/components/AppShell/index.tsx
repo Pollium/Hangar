@@ -13,12 +13,15 @@ import { UserMenu } from '@/modules/sessions/components/UserMenu';
 import { ProjectSwitcher } from '@/modules/projects/components/ProjectSwitcher';
 import { NewProjectModal } from '@/modules/projects/components/NewProjectModal';
 import { CloneRepoModal } from '@/modules/projects/components/CloneRepoModal';
+import { FileSearch } from '@/modules/sessions/components/FileSearch';
+import { Toaster } from '@/shared/components/Toaster';
 import { ShareProjectButton } from '@/modules/projects/components/ShareProjectButton';
 import { PublishPortsButton } from '@/modules/previews/components/PublishPortsButton';
 import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModal';
 import { useNewProjectModalStore } from '@/modules/projects/store/newProjectModal';
 import { useCloneRepoModalStore } from '@/modules/projects/store/cloneRepoModal';
 import { useFleet } from '@/modules/sessions/hooks/useFleet';
+import { useWorkspacePolling } from '@/modules/sessions/hooks/useWorkspacePolling';
 import { NotificationBell } from '@/modules/notifications/components/NotificationBell';
 import { useSession } from '@/shared/hooks/routing/useSession';
 import { useAuthStore } from '@/modules/auth/store/auth';
@@ -53,6 +56,7 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
     const navigate = useNavigate();
     const { user } = useSession();
     const { sessions, loading: sessionsLoading } = useFleet();
+    useWorkspacePolling();
     const openNewSession = useNewSessionModalStore((state) => state.open);
     const openNewProject = useNewProjectModalStore((state) => state.open);
     const openCloneRepo = useCloneRepoModalStore((state) => state.open);
@@ -201,6 +205,8 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
             <NewSessionModal />
             <NewProjectModal />
             <CloneRepoModal />
+            <FileSearch />
+            <Toaster />
         </div>
     );
 };
