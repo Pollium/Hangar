@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollShadow } from '@heroui/react';
-import { ChevronRight, ChevronDown, GitBranch as GitBranchIcon, GitCommit as GitCommitIcon, Check, RefreshCw, LoaderCircle } from 'lucide-react';
+import { GitBranch as GitBranchIcon, GitCommit as GitCommitIcon, Check, RefreshCw, LoaderCircle } from 'lucide-react';
 import { sandboxApi } from '@/modules/projects/api/api';
 import { useActiveProjectStore } from '@/modules/projects/store/activeProject';
 import { useFileExplorerStore } from '@/modules/sessions/store/fileExplorer';
+import { SidebarSection } from '@/modules/sessions/components/SidebarSection';
 import type { GitInfo } from '@hangar/contracts/modules/sandbox/domain';
 
 const iconBtn = 'grid size-6 place-items-center rounded text-muted transition-colors hover:text-accent disabled:opacity-50';
@@ -28,7 +29,6 @@ export const SourceControl = () => {
     const activeProjectId = useActiveProjectStore((state) => state.activeProjectId);
     const refreshToken = useFileExplorerStore((state) => state.refreshToken);
 
-    const [collapsed, setCollapsed] = useState(false);
     const [info, setInfo] = useState<GitInfo | null>(null);
     const [selectedRepo, setSelectedRepo] = useState<string | undefined>(undefined);
     const [tab, setTab] = useState<Tab>('commits');
@@ -64,17 +64,10 @@ export const SourceControl = () => {
     const commits = selected?.commits ?? [];
 
     return (
-        <div className='flex min-h-0 shrink-0 flex-col border-t border-hairline'>
-            <div className='flex items-center justify-between px-4 pt-3 pb-1.5'>
-                <button
-                    type='button'
-                    onClick={() => setCollapsed((c) => !c)}
-                    className='flex min-w-0 items-center gap-1 text-muted transition-colors hover:text-foreground'
-                    aria-expanded={!collapsed}
-                >
-                    {collapsed ? <ChevronRight className='size-3.5' aria-hidden='true' /> : <ChevronDown className='size-3.5' aria-hidden='true' />}
-                    <span className='mono-label'>Source Control</span>
-                </button>
+        <SidebarSection
+            panel='sourceControl'
+            title='Source Control'
+            actions={
                 <button
                     type='button'
                     onClick={() => activeProjectId !== null && void load(activeProjectId, selectedRepo)}
@@ -85,10 +78,9 @@ export const SourceControl = () => {
                 >
                     <RefreshCw className={`size-3.5 ${state === 'loading' ? 'animate-spin' : ''}`} aria-hidden='true' />
                 </button>
-            </div>
-
-            {!collapsed && (
-                <div className='flex min-h-0 flex-col'>
+            }
+        >
+            <div className='flex min-h-0 flex-1 flex-col'>
                     {activeProjectId === null ? (
                         <p className='px-4 pb-3 text-xs text-muted'>Select a project.</p>
                     ) : state === 'loading' && !info ? (
@@ -137,7 +129,7 @@ export const SourceControl = () => {
                                 ))}
                             </div>
 
-                            <ScrollShadow className='max-h-56 min-h-0 px-2 pb-2'>
+                            <ScrollShadow className='min-h-0 flex-1 px-2 pb-2'>
                                 {tab === 'commits' ? (
                                     commits.length === 0 ? (
                                         <p className='px-2 py-1 text-[11px] text-muted/70'>No commits yet.</p>
@@ -176,8 +168,7 @@ export const SourceControl = () => {
                             </ScrollShadow>
                         </>
                     )}
-                </div>
-            )}
-        </div>
+            </div>
+        </SidebarSection>
     );
 };

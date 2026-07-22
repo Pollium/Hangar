@@ -197,13 +197,17 @@ export default class SandboxService{
     async gitInfo(userId: number, projectId: number, requestedRepo?: string): Promise<GitInfo>{
         const { handle } = await this.ensureRunning(userId, projectId);
 
-        // Discover repos: a /workspace child is a repo when it contains a .git entry.
-        const found = await handle.exec(['find', WORKSPACE, '-maxdepth', '2', '-name', '.git']);
+        // Discover every git repo in the workspace at ANY depth (not just direct children of
+        // /workspace): a directory named `.git` marks a repo root. Prune node_modules (vendored
+        // deps sometimes ship a .git, and it's a needless perf sink) and don't descend into the
+        // .git dirs themselves. Submodule/worktree `.git` *files* (-type d excludes them) aren't
+        // treated as separate repos — they belong to their parent.
+        const found = await handle.exec(['find', WORKSPACE, '-name', 'node_modules', '-prune', '-o', '-type', 'd', '-name', '.git', '-prune', '-print']);
         const repos = (found.exitCode === 0 ? found.output.split('\n') : [])
             .filter(Boolean)
+            // /workspace/a/b/.git -> "a/b" (the repo's path relative to the workspace root).
             .map((gitDir) => gitDir.replace(/\/\.git$/, '').slice(WORKSPACE.length + 1))
-            // Only direct children of /workspace (slug with no nested slash).
-            .filter((slug) => slug && !slug.includes('/'))
+            .filter(Boolean)
             .sort((a, b) => a.localeCompare(b));
 
         const slug = requestedRepo && repos.includes(requestedRepo) ? requestedRepo : repos[0];

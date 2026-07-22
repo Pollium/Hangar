@@ -7,6 +7,7 @@ import { useActiveProjectStore } from '@/modules/projects/store/activeProject';
 import { useCloneRepoModalStore } from '@/modules/projects/store/cloneRepoModal';
 import { useFileExplorerStore } from '@/modules/sessions/store/fileExplorer';
 import { useWorkspaceStore } from '@/modules/sessions/store/workspace';
+import { SidebarSection } from '@/modules/sessions/components/SidebarSection';
 import type { FileEntry } from '@hangar/contracts/modules/sandbox/domain';
 
 const WORKSPACE = '/workspace';
@@ -166,41 +167,44 @@ export const FileExplorer = () => {
     const roots = childrenByPath[WORKSPACE] ?? [];
 
     return (
-        <div className='flex min-h-0 flex-1 flex-col border-t border-hairline'>
-            <div className='flex items-center justify-between px-4 pt-4 pb-1.5'>
-                <span className='mono-label text-muted'>Explorer</span>
-                <span className='flex items-center gap-0.5'>
-                    <button type='button' onClick={openClone} className={iconBtn} aria-label='Clone repository' title='Clone repository'>
-                        <FolderGit2 className='size-3.5' aria-hidden='true' />
-                    </button>
-                    <button
-                        type='button'
-                        onClick={() => useFileExplorerStore.getState().requestRefresh()}
-                        disabled={activeProjectId === null || rootState === 'loading'}
-                        className={iconBtn}
-                        aria-label='Refresh files'
-                        title='Refresh files'
-                    >
-                        <RefreshCw className={`size-3.5 ${rootState === 'loading' || busy ? 'animate-spin' : ''}`} aria-hidden='true' />
-                    </button>
-                </span>
-            </div>
-
-            <ScrollShadow className='min-h-0 flex-1 px-2 pb-2'>
-                {activeProjectId === null ? (
-                    <p className='px-2 text-xs text-muted'>Select a project.</p>
-                ) : rootState === 'loading' && roots.length === 0 ? (
-                    <div className='flex items-center gap-2 px-2 py-2 text-xs text-muted'>
-                        <LoaderCircle className='size-4 animate-spin' aria-hidden='true' /> Loading…
-                    </div>
-                ) : rootState === 'error' ? (
-                    <p className='px-2 text-xs text-muted'>Workspace unavailable. Is an agent connected?</p>
-                ) : roots.length === 0 ? (
-                    <p className='px-2 text-xs text-muted'>No files. Clone a repository to get started.</p>
-                ) : (
-                    renderEntries(roots, 0)
-                )}
-            </ScrollShadow>
+        <>
+            <SidebarSection
+                panel='explorer'
+                title='Explorer'
+                actions={
+                    <>
+                        <button type='button' onClick={openClone} className={iconBtn} aria-label='Clone repository' title='Clone repository'>
+                            <FolderGit2 className='size-3.5' aria-hidden='true' />
+                        </button>
+                        <button
+                            type='button'
+                            onClick={() => useFileExplorerStore.getState().requestRefresh()}
+                            disabled={activeProjectId === null || rootState === 'loading'}
+                            className={iconBtn}
+                            aria-label='Refresh files'
+                            title='Refresh files'
+                        >
+                            <RefreshCw className={`size-3.5 ${rootState === 'loading' || busy ? 'animate-spin' : ''}`} aria-hidden='true' />
+                        </button>
+                    </>
+                }
+            >
+                <ScrollShadow className='min-h-0 flex-1 px-2 pb-2'>
+                    {activeProjectId === null ? (
+                        <p className='px-2 text-xs text-muted'>Select a project.</p>
+                    ) : rootState === 'loading' && roots.length === 0 ? (
+                        <div className='flex items-center gap-2 px-2 py-2 text-xs text-muted'>
+                            <LoaderCircle className='size-4 animate-spin' aria-hidden='true' /> Loading…
+                        </div>
+                    ) : rootState === 'error' ? (
+                        <p className='px-2 text-xs text-muted'>Workspace unavailable. Is an agent connected?</p>
+                    ) : roots.length === 0 ? (
+                        <p className='px-2 text-xs text-muted'>No files. Clone a repository to get started.</p>
+                    ) : (
+                        renderEntries(roots, 0)
+                    )}
+                </ScrollShadow>
+            </SidebarSection>
 
             {menu && (
                 <div
@@ -235,6 +239,6 @@ export const FileExplorer = () => {
                     </button>
                 </div>
             )}
-        </div>
+        </>
     );
 };
