@@ -4,7 +4,9 @@ import { call } from '@/shared/api/call';
 import { projectRoutes } from '@hangar/contracts/modules/project/routes';
 import { sandboxRoutes } from '@hangar/contracts/modules/sandbox/routes';
 import { cliRoutes } from '@hangar/contracts/modules/cli/routes';
+import { githubRoutes } from '@hangar/contracts/modules/github/routes';
 import type { AddProjectRepositoryInput, CreateProjectInput, UpdateProjectInput } from '@hangar/contracts/modules/project/http';
+import type { CloneRepoInput } from '@hangar/contracts/modules/sandbox/http';
 
 // The default 30s GET cache would otherwise serve a stale, pre-membership-change project list
 // to the next refresh() right after creating/joining/leaving a project.
@@ -39,9 +41,14 @@ export const sandboxApi = {
     provision: (projectId: number) => call(sandboxRoutes.provision, { path: { projectId } }),
     start: (projectId: number) => call(sandboxRoutes.start, { path: { projectId } }),
     stop: (projectId: number) => call(sandboxRoutes.stop, { path: { projectId } }),
-    destroy: (projectId: number) => call(sandboxRoutes.destroy, { path: { projectId } })
+    destroy: (projectId: number) => call(sandboxRoutes.destroy, { path: { projectId } }),
+    clone: (projectId: number, body: CloneRepoInput) => call(sandboxRoutes.clone, { path: { projectId }, body })
 };
 
 export const cliApi = {
     list: () => call(cliRoutes.list)
+};
+
+export const githubApi = {
+    repos: () => call(githubRoutes.repos)
 };

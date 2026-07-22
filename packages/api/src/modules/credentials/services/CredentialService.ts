@@ -69,6 +69,12 @@ export default class CredentialService{
             .map((credential) => `${credential.envVar}=${this.#cipher.decrypt(credential.ciphertext)}`);
     }
 
+    /** Internal only: decrypt one variable by name, or null if the owner has none. */
+    async getValue(userId: number, name: string): Promise<string | null>{
+        const credential = await Credential.findOneBy({ ownerId: userId, envVar: name });
+        return credential ? this.#cipher.decrypt(credential.ciphertext) : null;
+    }
+
     #view(credential: Credential): CredentialView{
         return {
             id: credential.id,

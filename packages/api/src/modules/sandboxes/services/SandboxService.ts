@@ -3,12 +3,16 @@ import { logger } from '@/core/utils/Logger';
 import { eventBus } from '@/shared/events/EventBus';
 import { agentRegistry } from '@/modules/agents/transport/AgentRegistry';
 import ProjectService from '@/modules/projects/services/ProjectService';
+import CredentialService from '@/modules/credentials/services/CredentialService';
 import type { IDockerService, IContainerHandle } from '@/shared/services/docker/contracts';
 import type Project from '@/modules/projects/models/Project';
 import Sandbox from '../models/Sandbox';
 import SandboxProvisioner from './SandboxProvisioner';
+import { repoSlug } from './repoSlug';
 import { SandboxError } from '../contracts/domain/errors';
 import type { SandboxUsage } from '@hangar/contracts/modules/sandbox/domain';
+
+const WORKSPACE = '/workspace';
 
 // All service instances in this API process share the same project provisioning flight.
 const provisionFlights = new Map<string, Promise<Sandbox>>();
@@ -21,6 +25,7 @@ const provisionFlights = new Map<string, Promise<Sandbox>>();
 export default class SandboxService{
     #projects = new ProjectService();
     #provisioner = new SandboxProvisioner();
+    #credentials = new CredentialService();
 
     /** Docker bound to the given owner's live agent, or throws when none is connected. */
     #dockerFor(ownerId: number): IDockerService{
@@ -115,6 +120,33 @@ export default class SandboxService{
             }
         }
         return { sandbox, handle: this.#dockerFor(sandbox.ownerId).get(sandbox.containerId as string) };
+    }
+
+    /**
+     * Clones a repo into the running workspace (skipping if its slug dir already exists) and
+     * persists it to the project so future provisions re-clone it. Private repos authenticate via
+     * the owner's GITHUB_TOKEN through the sandbox's baked-in credential helper. `git`/`test` run
+     * as argv — a URL can never be interpreted as shell syntax.
+     */
+    async cloneRepository(userId: number, projectId: number, url: string): Promise<void>{
+        const trimmed = url.trim();
+        if(!/^https?:\/\//i.test(trimmed)) throw SandboxError.InvalidPath();
+
+        const { handle } = await this.ensureRunning(userId, projectId);
+        const dest = `${WORKSPACE}/${repoSlug(trimmed)}`;
+        const existing = await handle.exec(['test', '-e', dest]);
+        if(existing.exitCode !== 0){
+            // The owner's GITHUB_TOKEN reaches the credential helper only through the process env
+            // (never written to the volume), so a private repo authenticates like a session push.
+            const env = await this.#credentials.resolveEnvFor(userId, ['GITHUB_TOKEN']);
+            const clone = await handle.exec(['git', 'clone', trimmed, dest], { cwd: WORKSPACE, env });
+            if(clone.exitCode !== 0) throw SandboxError.CloneFailed(clone.output.split('\n').filter(Boolean).pop());
+        }
+
+        const repos = await this.#projects.listRepositories(userId, projectId);
+        if(!repos.some((repo) => repo.url === trimmed)){
+            await this.#projects.addRepository(userId, projectId, { url: trimmed });
+        }
     }
 
     async #provisionProject(project: Project): Promise<Sandbox>{

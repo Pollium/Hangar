@@ -2,11 +2,12 @@ import BaseController from '@/shared/controllers/BaseController';
 import { Route } from '@/shared/controllers/Route';
 import { Status } from '@/shared/controllers/Status';
 import { Middleware } from '@/shared/middlewares/Middleware';
-import { NumericParam } from '@/shared/controllers/RequestParams';
+import { NumericParam, Body } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import SandboxService from '../services/SandboxService';
 import { sandboxRoutes } from '@hangar/contracts/modules/sandbox/routes';
+import type { CloneRepoInput } from '@hangar/contracts/modules/sandbox/http';
 
 @Middleware(AuthenticatedRoute)
 export default class SandboxController extends BaseController{
@@ -41,5 +42,11 @@ export default class SandboxController extends BaseController{
     @Route(sandboxRoutes.destroy)
     destroy(@CurrentUser() userId: number, @NumericParam('projectId') projectId: number){
         return this.#service.destroy(userId, projectId);
+    }
+
+    @Route(sandboxRoutes.clone)
+    async clone(@CurrentUser() userId: number, @NumericParam('projectId') projectId: number, @Body() body: CloneRepoInput){
+        await this.#service.cloneRepository(userId, projectId, body.url);
+        return { ok: true as const };
     }
 }

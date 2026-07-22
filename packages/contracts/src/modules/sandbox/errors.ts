@@ -5,7 +5,9 @@ export const SandboxErrors = {
     causes: {
         NotFound: 404,
         NotProvisioned: 409,
-        ProvisionFailed: 500
+        ProvisionFailed: 500,
+        InvalidPath: 400,
+        CloneFailed: 502
     }
 } as const satisfies ErrorTable;
 

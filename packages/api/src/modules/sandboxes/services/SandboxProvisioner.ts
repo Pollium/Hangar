@@ -1,9 +1,11 @@
 import { config } from '@/shared/config';
 import { logger } from '@/core/utils/Logger';
 import ProjectRepository from '@/modules/projects/models/ProjectRepository';
+import CredentialService from '@/modules/credentials/services/CredentialService';
 import type { IDockerService, IContainerHandle } from '@/shared/services/docker/contracts';
 import type Project from '@/modules/projects/models/Project';
 import type Sandbox from '../models/Sandbox';
+import { repoSlug } from './repoSlug';
 
 /**
  * Turns a Sandbox row into a live, hardened container ON THE PROJECT OWNER'S AGENT: ensures the
@@ -11,6 +13,8 @@ import type Sandbox from '../models/Sandbox';
  * first boot. The container runs a keeper process so it stays up with no active session (24/7).
  */
 export default class SandboxProvisioner{
+    #credentials = new CredentialService();
+
     containerName(projectId: number): string{
         return `hangar-${config.docker.namespace}-project-${projectId}`;
     }
@@ -98,12 +102,15 @@ export default class SandboxProvisioner{
      */
     async #cloneRepositories(handle: IContainerHandle, project: Project): Promise<void>{
         const repos = await ProjectRepository.findBy({ projectId: project.id });
+        // The owner's GITHUB_TOKEN reaches the credential helper only through the process env
+        // (never persisted into the volume), so private repos clone on first boot too.
+        const env = await this.#credentials.resolveEnvFor(project.ownerId, ['GITHUB_TOKEN']);
         for(const repo of repos){
-            const dest = `/workspace/${this.#repoSlug(repo.url)}`;
+            const dest = `/workspace/${repoSlug(repo.url)}`;
             try{
                 const existing = await handle.exec(['test', '-e', dest]);
                 if(existing.exitCode === 0) continue;
-                await handle.exec(['git', 'clone', repo.url, dest], { cwd: '/workspace' });
+                await handle.exec(['git', 'clone', repo.url, dest], { cwd: '/workspace', env });
             }catch(error){
                 logger.error('sandbox repo clone failed', error, {
                     scope: 'sandbox.clone',
@@ -114,10 +121,4 @@ export default class SandboxProvisioner{
         }
     }
 
-    #repoSlug(url: string): string{
-        const trimmed = url.replace(/\.git$/i, '').replace(/\/+$/, '');
-        const last = trimmed.split('/').pop() || '';
-        const safe = last.replace(/[^a-zA-Z0-9._-]/g, '-');
-        return safe && safe !== '.' && safe !== '..' ? safe : 'repo';
-    }
 }

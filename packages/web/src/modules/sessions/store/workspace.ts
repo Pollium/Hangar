@@ -3,7 +3,7 @@ import { create } from 'zustand';
 /** What a pane renders. `null` content = an empty pane showing the picker. */
 export type PaneContent =
     | { kind: 'terminal'; sessionId: number }
-    | { kind: 'codespace'; projectId: number };
+    | { kind: 'codespace'; projectId: number; filePath?: string };
 
 export type SplitDir = 'row' | 'col';
 
@@ -80,6 +80,8 @@ interface WorkspaceState{
     setActive: (leafId: string) => void;
     /** Focus an existing pane showing this content, else fill the active pane (creating the first). */
     openContent: (content: PaneContent) => void;
+    /** Open the project's codespace focused on a file — reuses its pane, navigating to the file. */
+    openCodespaceAt: (projectId: number, filePath: string) => void;
     /** Set a specific pane's content (used by the empty-pane picker) and focus it. */
     assign: (leafId: string, content: PaneContent) => void;
     /** Split the active pane; the new sibling (optionally seeded) becomes active. */
@@ -111,6 +113,24 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
             if(existing) return { activeLeafId: existing.id };
 
             const targetId = (state.activeLeafId && findLeaf(state.root, state.activeLeafId)?.id)
+                || firstLeaf(state.root).id;
+            return {
+                root: setLeafContent(state.root, targetId, content),
+                activeLeafId: targetId
+            };
+        }),
+
+        openCodespaceAt: (projectId, filePath) => set((state) => {
+            const content: PaneContent = { kind: 'codespace', projectId, filePath };
+            if(!state.root){
+                const leaf = makeLeaf(content);
+                return { root: leaf, activeLeafId: leaf.id };
+            }
+            // Reuse the project's codespace pane if open (matched by projectId), replacing its
+            // content so the file changes; otherwise fill the active pane.
+            const existing = findContent(state.root, { kind: 'codespace', projectId });
+            const targetId = existing?.id
+                || (state.activeLeafId && findLeaf(state.root, state.activeLeafId)?.id)
                 || firstLeaf(state.root).id;
             return {
                 root: setLeafContent(state.root, targetId, content),

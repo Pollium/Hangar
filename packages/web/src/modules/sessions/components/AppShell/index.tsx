@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Dropdown, ScrollShadow } from '@heroui/react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings, Plus, Code2, Server, PanelLeftClose, PanelLeftOpen, FolderPlus, SquareTerminal } from 'lucide-react';
+import { LayoutDashboard, Settings, Plus, Code2, Server, PanelLeftClose, PanelLeftOpen, FolderPlus, SquareTerminal, FolderGit2 } from 'lucide-react';
 import { SessionSidebar } from '@/modules/sessions/components/SessionSidebar';
 import { useSidebarStore } from '@/modules/sessions/store/sidebar';
 import { SessionSearch } from '@/modules/sessions/components/SessionSearch';
@@ -10,10 +10,12 @@ import { NewSessionModal } from '@/modules/sessions/components/NewSessionModal';
 import { UserMenu } from '@/modules/sessions/components/UserMenu';
 import { ProjectSwitcher } from '@/modules/projects/components/ProjectSwitcher';
 import { NewProjectModal } from '@/modules/projects/components/NewProjectModal';
+import { CloneRepoModal } from '@/modules/projects/components/CloneRepoModal';
 import { ShareProjectButton } from '@/modules/projects/components/ShareProjectButton';
 import { PublishPortsButton } from '@/modules/previews/components/PublishPortsButton';
 import { useNewSessionModalStore } from '@/modules/sessions/store/newSessionModal';
 import { useNewProjectModalStore } from '@/modules/projects/store/newProjectModal';
+import { useCloneRepoModalStore } from '@/modules/projects/store/cloneRepoModal';
 import { useFleet } from '@/modules/sessions/hooks/useFleet';
 import { NotificationBell } from '@/modules/notifications/components/NotificationBell';
 import { useSession } from '@/shared/hooks/routing/useSession';
@@ -51,6 +53,7 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
     const { sessions, loading: sessionsLoading } = useFleet();
     const openNewSession = useNewSessionModalStore((state) => state.open);
     const openNewProject = useNewProjectModalStore((state) => state.open);
+    const openCloneRepo = useCloneRepoModalStore((state) => state.open);
     const sidebarCollapsed = useSidebarStore((state) => state.collapsed);
     const toggleSidebar = useSidebarStore((state) => state.toggle);
     const [theme, setTheme] = useState<Theme>(() =>
@@ -108,6 +111,17 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
                 </div>
 
                 <SessionSidebar sessions={sessions} loading={sessionsLoading} />
+
+                <div className='mt-auto shrink-0 border-t border-hairline px-2 py-2'>
+                    <button
+                        type='button'
+                        onClick={openCloneRepo}
+                        className='flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-[13px] text-muted transition-colors hover:bg-foreground/[0.04] hover:text-accent'
+                    >
+                        <span className='flex size-5 items-center justify-center'><FolderGit2 className='size-4' aria-hidden='true' /></span>
+                        <span className='truncate'>Clone repository</span>
+                    </button>
+                </div>
             </aside>
 
             <div className='flex min-h-0 min-w-0 flex-1 flex-col'>
@@ -160,6 +174,10 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
                                     <SquareTerminal className='size-4' aria-hidden='true' />
                                     New session
                                 </Dropdown.Item>
+                                <Dropdown.Item id='clone-repo' onAction={openCloneRepo}>
+                                    <FolderGit2 className='size-4' aria-hidden='true' />
+                                    Clone repository
+                                </Dropdown.Item>
                             </Dropdown.Menu>
                         </Dropdown.Popover>
                     </Dropdown.Root>
@@ -187,6 +205,7 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
 
             <NewSessionModal />
             <NewProjectModal />
+            <CloneRepoModal />
         </div>
     );
 };
