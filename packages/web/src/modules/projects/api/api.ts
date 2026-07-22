@@ -42,6 +42,8 @@ export const sandboxApi = {
     start: (projectId: number) => call(sandboxRoutes.start, { path: { projectId } }),
     stop: (projectId: number) => call(sandboxRoutes.stop, { path: { projectId } }),
     destroy: (projectId: number) => call(sandboxRoutes.destroy, { path: { projectId } }),
+    files: (projectId: number, path?: string) => call(sandboxRoutes.files, { path: { projectId }, query: path ? { path } : {} }),
+    git: (projectId: number, repo?: string) => call(sandboxRoutes.git, { path: { projectId }, query: repo ? { repo } : {} }),
     clone: (projectId: number, body: CloneRepoInput) => call(sandboxRoutes.clone, { path: { projectId }, body })
 };
 

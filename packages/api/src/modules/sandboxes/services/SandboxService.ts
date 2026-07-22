@@ -6,11 +6,12 @@ import ProjectService from '@/modules/projects/services/ProjectService';
 import CredentialService from '@/modules/credentials/services/CredentialService';
 import type { IDockerService, IContainerHandle } from '@/shared/services/docker/contracts';
 import type Project from '@/modules/projects/models/Project';
+import { posix as pathPosix } from 'node:path';
 import Sandbox from '../models/Sandbox';
 import SandboxProvisioner from './SandboxProvisioner';
 import { repoSlug } from './repoSlug';
 import { SandboxError } from '../contracts/domain/errors';
-import type { SandboxUsage } from '@hangar/contracts/modules/sandbox/domain';
+import type { SandboxUsage, FileEntry, GitInfo, GitBranch, GitCommit } from '@hangar/contracts/modules/sandbox/domain';
 
 const WORKSPACE = '/workspace';
 
@@ -120,6 +121,85 @@ export default class SandboxService{
             }
         }
         return { sandbox, handle: this.#dockerFor(sandbox.ownerId).get(sandbox.containerId as string) };
+    }
+
+    /**
+     * Immediate children of a directory in the workspace, for the file explorer. Auto-starts the
+     * sandbox. The path is normalized and confined to /workspace (no traversal); a missing dir
+     * yields an empty list rather than an error so a just-provisioned workspace reads cleanly.
+     */
+    async listFiles(userId: number, projectId: number, requestedPath?: string): Promise<FileEntry[]>{
+        const target = pathPosix.normalize(requestedPath?.trim() || WORKSPACE);
+        if(target !== WORKSPACE && !target.startsWith(`${WORKSPACE}/`)) throw SandboxError.InvalidPath();
+
+        const { handle } = await this.ensureRunning(userId, projectId);
+        const result = await handle.exec(['find', target, '-maxdepth', '1', '-mindepth', '1', '-printf', '%y\t%f\n']);
+        if(result.exitCode !== 0) return [];
+
+        const entries = result.output.split('\n').filter(Boolean).map((line): FileEntry => {
+            const tab = line.indexOf('\t');
+            const kind = line.slice(0, tab);
+            const name = line.slice(tab + 1);
+            return { name, path: `${target}/${name}`, type: kind === 'd' ? 'dir' : 'file' };
+        });
+        // Directories first, then alphabetical — matches a familiar file-tree order.
+        return entries.sort((a, b) => a.type !== b.type ? (a.type === 'dir' ? -1 : 1) : a.name.localeCompare(b.name));
+    }
+
+    /**
+     * Source-control view of the workspace: every git repo under /workspace (by subdirectory
+     * slug) and, for the requested `repo` (defaulting to the first), its branches and recent
+     * commits. Auto-starts the sandbox. All `git` invocations run as argv with an explicit
+     * `-C <repo>` (never a shell), and the repo arg is confined to a single /workspace child, so
+     * a slug can neither escape the workspace nor be interpreted as shell syntax. A repo with no
+     * commits (freshly `git init`ed) reads as an empty history rather than an error.
+     */
+    async gitInfo(userId: number, projectId: number, requestedRepo?: string): Promise<GitInfo>{
+        const { handle } = await this.ensureRunning(userId, projectId);
+
+        // Discover repos: a /workspace child is a repo when it contains a .git entry.
+        const found = await handle.exec(['find', WORKSPACE, '-maxdepth', '2', '-name', '.git']);
+        const repos = (found.exitCode === 0 ? found.output.split('\n') : [])
+            .filter(Boolean)
+            .map((gitDir) => gitDir.replace(/\/\.git$/, '').slice(WORKSPACE.length + 1))
+            // Only direct children of /workspace (slug with no nested slash).
+            .filter((slug) => slug && !slug.includes('/'))
+            .sort((a, b) => a.localeCompare(b));
+
+        const slug = requestedRepo && repos.includes(requestedRepo) ? requestedRepo : repos[0];
+        if(!slug) return { repos, selected: null };
+
+        const repoPath = `${WORKSPACE}/${slug}`;
+        const [branchRes, refsRes, logRes] = await Promise.all([
+            handle.exec(['git', '-C', repoPath, 'rev-parse', '--abbrev-ref', 'HEAD']),
+            handle.exec(['git', '-C', repoPath, 'for-each-ref', '--format=%(refname)%09%(HEAD)', 'refs/heads', 'refs/remotes']),
+            handle.exec(['git', '-C', repoPath, 'log', '-n', '50', '--format=%h%x09%an%x09%aI%x09%s'])
+        ]);
+
+        const rawBranch = branchRes.exitCode === 0 ? branchRes.output.trim() : '';
+        const branch = rawBranch && rawBranch !== 'HEAD' ? rawBranch : null;
+
+        const branches: GitBranch[] = (refsRes.exitCode === 0 ? refsRes.output.split('\n') : [])
+            .filter(Boolean)
+            .map((line): GitBranch => {
+                const tab = line.indexOf('\t');
+                const refname = tab === -1 ? line : line.slice(0, tab);
+                const head = tab !== -1 && line.slice(tab + 1).trim() === '*';
+                const remote = refname.startsWith('refs/remotes/');
+                const name = refname.replace(/^refs\/(heads|remotes)\//, '');
+                return { name, current: head, remote };
+            })
+            // Skip the symbolic origin/HEAD -> origin/main pointer; it isn't a real branch.
+            .filter((entry) => !entry.name.endsWith('/HEAD'));
+
+        const commits: GitCommit[] = (logRes.exitCode === 0 ? logRes.output.split('\n') : [])
+            .filter(Boolean)
+            .map((line): GitCommit => {
+                const [hash = '', author = '', date = '', ...rest] = line.split('\t');
+                return { hash, author, date, subject: rest.join('\t') };
+            });
+
+        return { repos, selected: { slug, branch, branches, commits } };
     }
 
     /**

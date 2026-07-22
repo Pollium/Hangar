@@ -2,7 +2,7 @@ import BaseController from '@/shared/controllers/BaseController';
 import { Route } from '@/shared/controllers/Route';
 import { Status } from '@/shared/controllers/Status';
 import { Middleware } from '@/shared/middlewares/Middleware';
-import { NumericParam, Body } from '@/shared/controllers/RequestParams';
+import { NumericParam, Query, Body } from '@/shared/controllers/RequestParams';
 import { AuthenticatedRoute } from '@/modules/auth/middlewares/AuthenticatedRoute';
 import { CurrentUser } from '@/modules/auth/middlewares/CurrentUser';
 import SandboxService from '../services/SandboxService';
@@ -42,6 +42,16 @@ export default class SandboxController extends BaseController{
     @Route(sandboxRoutes.destroy)
     destroy(@CurrentUser() userId: number, @NumericParam('projectId') projectId: number){
         return this.#service.destroy(userId, projectId);
+    }
+
+    @Route(sandboxRoutes.files)
+    files(@CurrentUser() userId: number, @NumericParam('projectId') projectId: number, @Query('path') path?: string){
+        return this.#service.listFiles(userId, projectId, path);
+    }
+
+    @Route(sandboxRoutes.git)
+    git(@CurrentUser() userId: number, @NumericParam('projectId') projectId: number, @Query('repo') repo?: string){
+        return this.#service.gitInfo(userId, projectId, repo);
     }
 
     @Route(sandboxRoutes.clone)

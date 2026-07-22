@@ -4,6 +4,8 @@ import { Dropdown, ScrollShadow } from '@heroui/react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Settings, Plus, Code2, Server, PanelLeftClose, PanelLeftOpen, FolderPlus, SquareTerminal, FolderGit2 } from 'lucide-react';
 import { SessionSidebar } from '@/modules/sessions/components/SessionSidebar';
+import { FileExplorer } from '@/modules/sessions/components/FileExplorer';
+import { SourceControl } from '@/modules/sessions/components/SourceControl';
 import { useSidebarStore } from '@/modules/sessions/store/sidebar';
 import { SessionSearch } from '@/modules/sessions/components/SessionSearch';
 import { NewSessionModal } from '@/modules/sessions/components/NewSessionModal';
@@ -112,16 +114,9 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
 
                 <SessionSidebar sessions={sessions} loading={sessionsLoading} />
 
-                <div className='mt-auto shrink-0 border-t border-hairline px-2 py-2'>
-                    <button
-                        type='button'
-                        onClick={openCloneRepo}
-                        className='flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-[13px] text-muted transition-colors hover:bg-foreground/[0.04] hover:text-accent'
-                    >
-                        <span className='flex size-5 items-center justify-center'><FolderGit2 className='size-4' aria-hidden='true' /></span>
-                        <span className='truncate'>Clone repository</span>
-                    </button>
-                </div>
+                <FileExplorer />
+
+                <SourceControl />
             </aside>
 
             <div className='flex min-h-0 min-w-0 flex-1 flex-col'>

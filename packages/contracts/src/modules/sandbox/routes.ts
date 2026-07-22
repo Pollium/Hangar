@@ -1,5 +1,5 @@
 import { get, post, del } from '../../shared/routing';
-import type { Sandbox, SandboxUsage } from './domain';
+import type { Sandbox, SandboxUsage, FileEntry, GitInfo } from './domain';
 import type { CloneRepoInput } from './http';
 
 /** One sandbox per project, keyed by projectId. */
@@ -10,6 +10,10 @@ export const sandboxRoutes = {
     stop: post<void, Sandbox>('/sandboxes/:projectId/stop'),
     usage: get<SandboxUsage>('/sandboxes/:projectId/usage'),
     destroy: del('/sandboxes/:projectId'),
+    // Workspace file explorer: immediate children of `?path=` (default /workspace).
+    files: get<FileEntry[]>('/sandboxes/:projectId/files'),
+    // Source control: workspace repos, plus branches/commits of the `?repo=` slug when given.
+    git: get<GitInfo>('/sandboxes/:projectId/git'),
     // Clone a repo into the running workspace and persist it to the project.
     clone: post<CloneRepoInput, { ok: true }>('/sandboxes/:projectId/clone')
 };
