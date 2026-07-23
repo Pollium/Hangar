@@ -2,6 +2,7 @@ import { KeyRound, Lock, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Dropdown } from '@heroui/react';
 import { credentialApi } from '@/modules/settings/api/api';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
+import { relativeTime } from '@/shared/utils/time';
 import { useSession } from '@/shared/hooks/routing/useSession';
 import type { CredentialView } from '@hangar/contracts/modules/credential/domain';
 
@@ -9,17 +10,6 @@ interface Props{
     credentials: CredentialView[];
     onChanged: () => void;
 }
-
-const addedAgo = (value: string): string => {
-    const elapsed = Math.max(0, Date.now() - Date.parse(value));
-    const minutes = Math.floor(elapsed / 60_000);
-    if(minutes < 1) return 'just now';
-    if(minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if(hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-};
 
 export const CredentialList = ({ credentials, onChanged }: Props) => {
     const { user } = useSession();
@@ -60,7 +50,7 @@ export const CredentialList = ({ credentials, onChanged }: Props) => {
                                     <span className='min-w-0 truncate font-mono font-medium text-foreground'>{credential.name}</span>
                                 </div>
                             </td>
-                            <td className='hidden whitespace-nowrap px-4 py-2.5 text-xs text-muted sm:table-cell'>{addedAgo(credential.createdAt)}</td>
+                            <td className='hidden whitespace-nowrap px-4 py-2.5 text-xs text-muted sm:table-cell'>{relativeTime(credential.createdAt)}</td>
                             <td className='hidden px-4 py-2.5 sm:table-cell'>
                                 <span className='grid size-6 shrink-0 place-items-center overflow-hidden rounded-full bg-foreground/10 text-[11px] font-medium text-foreground' aria-hidden='true'>
                                     {user?.avatarUrl ? <img src={user.avatarUrl} alt='' className='size-full object-cover' /> : initial}

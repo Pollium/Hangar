@@ -5,23 +5,12 @@ import { AppShell } from '@/modules/sessions/components/AppShell';
 import { Canvas, Row } from '@/shared/components/ui/Blueprint';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
+import { relativeTime } from '@/shared/utils/time';
 import { agentApi } from '@/modules/agents/api/api';
 import type { Agent, CreatedAgent } from '@hangar/contracts/modules/agent/domain';
 
 const input = 'rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent placeholder:text-muted';
 const primaryBtn = 'inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-3.5 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent-hover disabled:opacity-60';
-
-// Relative "last seen" label from an ISO timestamp; em dash when never connected.
-const lastSeen = (value: string | null): string => {
-    if(!value) return '—';
-    const elapsed = Math.max(0, Date.now() - Date.parse(value));
-    const minutes = Math.floor(elapsed / 60_000);
-    if(minutes < 1) return 'just now';
-    if(minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if(hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
-};
 
 const AgentsPage = () => {
     const [agents, setAgents] = useState<Agent[]>([]);
@@ -119,7 +108,7 @@ const AgentsPage = () => {
                                                     {agent.status === 'online' ? 'Online' : 'Offline'}
                                                 </span>
                                             </td>
-                                            <td className='hidden whitespace-nowrap px-4 py-2.5 text-xs text-muted sm:table-cell'>{lastSeen(agent.lastSeenAt)}</td>
+                                            <td className='hidden whitespace-nowrap px-4 py-2.5 text-xs text-muted sm:table-cell'>{relativeTime(agent.lastSeenAt)}</td>
                                             <td className='px-4 py-2.5 text-right'>
                                                 <button
                                                     type='button'

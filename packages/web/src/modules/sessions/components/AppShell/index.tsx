@@ -92,7 +92,7 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
                         <PanelLeftClose className='size-4' aria-hidden='true' />
                     </button>
                 </div>
-                <nav className='flex flex-col gap-0.5' aria-label='Primary navigation'>
+                <nav className='flex flex-col gap-0.5 pb-2' aria-label='Primary navigation'>
                     {NAV.map((item) => {
                         const Icon = item.icon;
                         return (
@@ -104,23 +104,15 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
                     })}
                 </nav>
 
-                <div className='flex items-center justify-between px-4 pt-5 pb-1.5'>
-                    <span className='mono-label text-muted'>Sessions</span>
-                    <button
-                        type='button'
-                        onClick={openNewSession}
-                        className='grid size-6 place-items-center rounded text-muted transition-colors hover:text-accent'
-                        aria-label='New session'
-                    >
-                        <Plus className='size-3.5' aria-hidden='true' />
-                    </button>
+                {/* Sessions, Explorer and Source Control are each collapsible/resizable panels. Their
+                    fixed heights can exceed the sidebar, so the stack scrolls as a whole. */}
+                <div className='flex min-h-0 flex-1 flex-col overflow-y-auto'>
+                    <SessionSidebar sessions={sessions} loading={sessionsLoading} />
+
+                    <FileExplorer />
+
+                    <SourceControl />
                 </div>
-
-                <SessionSidebar sessions={sessions} loading={sessionsLoading} />
-
-                <FileExplorer />
-
-                <SourceControl />
             </aside>
 
             <div className='flex min-h-0 min-w-0 flex-1 flex-col'>

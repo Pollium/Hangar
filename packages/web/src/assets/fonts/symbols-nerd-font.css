@@ -1,0 +1,10 @@
+/* Symbols Nerd Font (PUA icon glyphs only) — self-hosted so agent CLIs that use Nerd Font icons
+   (git branch, folder, status glyphs) render them in the terminal instead of tofu boxes. Loaded
+   as an xterm fontFamily fallback after JetBrains Mono, which covers text but not the PUA range. */
+@font-face{
+    font-family: 'Symbols Nerd Font Mono';
+    src: url('./symbols-nerd-font-mono.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}

@@ -9,6 +9,9 @@ import '@xterm/xterm/css/xterm.css';
 // per-glyph fallback substitution breaks the monospace grid and mangles art like Claude's logo.
 import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/700.css';
+// Nerd Font symbol range (PUA) as a fallback so agent CLIs using Nerd Font icons render them
+// instead of tofu boxes; JetBrains Mono still shapes all text/box-drawing glyphs before it.
+import '@/assets/fonts/symbols-nerd-font.css';
 import { useChannel } from '@/shared/hooks/socket/useChannel';
 import TerminalInputGate from '@/modules/sessions/hooks/TerminalInputGate';
 import type { SessionStatus } from '@hangar/contracts/modules/session/domain';
@@ -70,7 +73,7 @@ export const useTerminal = (sessionId: number, paneId?: string) => {
             // Docker provides raw PTY bytes. Rewriting LF into CRLF corrupts cursor-sensitive
             // fullscreen TUIs such as OpenCode; snapshots are normalized by the gateway.
             convertEol: false,
-            fontFamily: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
+            fontFamily: '"JetBrains Mono", "Symbols Nerd Font Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
             fontSize: 13,
             cursorBlink: true,
             scrollback: 10_000,

@@ -21,6 +21,11 @@ RUN useradd -m -s /bin/bash coder
 ENV NPM_CONFIG_PREFIX=/home/coder/.npm-global
 ENV PATH=/home/coder/.npm-global/bin:${PATH}
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false
+# UTF-8 locale for every process in the sandbox. Ubuntu minimal defaults to POSIX/C, which makes
+# the Ink-based agent CLIs (claude, opencode, gemini) degrade their box-drawing/braille art to
+# ASCII. C.UTF-8 ships in the base image with no `locales` package needed.
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 USER coder
 
 # Pin every global CLI for reproducible sandbox builds; a missing/broken package fails the image.

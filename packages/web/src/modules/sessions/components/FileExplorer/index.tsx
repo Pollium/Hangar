@@ -12,19 +12,11 @@ import { SidebarSection } from '@/modules/sessions/components/SidebarSection';
 import { PromptModal } from '@/shared/components/PromptModal';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { toast } from '@/shared/store/toast';
+import { errorMessage } from '@/shared/utils/error';
+import { WORKSPACE, parentDir } from '@/shared/utils/workspacePath';
 import type { FileEntry } from '@hangar/contracts/modules/sandbox/domain';
 
-const WORKSPACE = '/workspace';
 const iconBtn = 'grid size-6 place-items-center rounded text-muted transition-colors hover:text-accent disabled:opacity-50';
-
-// Parent directory of an absolute path (its containing folder). Falls back to /workspace.
-const parentDir = (path: string): string => {
-    const cut = path.lastIndexOf('/');
-    const parent = cut > 0 ? path.slice(0, cut) : WORKSPACE;
-    return parent.startsWith(WORKSPACE) ? parent : WORKSPACE;
-};
-
-const errText = (err: unknown, fallback: string): string => err instanceof Error ? err.message : fallback;
 
 interface Menu{ entry: FileEntry; x: number; y: number; }
 // A pending create: which directory to create in, and whether a file or folder.
@@ -129,7 +121,7 @@ export const FileExplorer = () => {
             toast.success(`Renamed to ${nextName}`);
             return null;
         }catch(err){
-            return errText(err, 'Rename failed.');
+            return errorMessage(err, 'Rename failed.');
         }
     };
 
@@ -141,7 +133,7 @@ export const FileExplorer = () => {
             toast.success(`Deleted ${deleting.name}`);
             return null;
         }catch(err){
-            return errText(err, 'Delete failed.');
+            return errorMessage(err, 'Delete failed.');
         }
     };
 
@@ -154,7 +146,7 @@ export const FileExplorer = () => {
             toast.success(`Created ${name}`);
             return null;
         }catch(err){
-            return errText(err, 'Create failed.');
+            return errorMessage(err, 'Create failed.');
         }
     };
 

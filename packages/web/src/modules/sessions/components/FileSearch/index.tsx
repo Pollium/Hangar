@@ -4,15 +4,8 @@ import { sandboxApi } from '@/modules/projects/api/api';
 import { useActiveProjectStore } from '@/modules/projects/store/activeProject';
 import { useFileSearchStore } from '@/modules/sessions/store/fileSearch';
 import { useWorkspaceStore } from '@/modules/sessions/store/workspace';
+import { parentDir, workspaceRelative } from '@/shared/utils/workspacePath';
 import type { FileEntry } from '@hangar/contracts/modules/sandbox/domain';
-
-const WORKSPACE = '/workspace';
-const parentDir = (path: string): string => {
-    const cut = path.lastIndexOf('/');
-    return cut > 0 ? path.slice(0, cut) : WORKSPACE;
-};
-// Strip the /workspace/ prefix for display.
-const rel = (path: string): string => path.startsWith(`${WORKSPACE}/`) ? path.slice(WORKSPACE.length + 1) : path;
 
 /**
  * Command-palette-style workspace file finder (Cmd/Ctrl+P). Debounced server-side search over all
@@ -124,7 +117,7 @@ export const FileSearch = () => {
                             >
                                 <FileIcon className='size-3.5 shrink-0 text-muted' aria-hidden='true' />
                                 <span className='shrink-0 text-[13px] text-foreground'>{entry.name}</span>
-                                <span className='min-w-0 flex-1 truncate text-[11px] text-muted/70'>{rel(parentDir(entry.path))}</span>
+                                <span className='min-w-0 flex-1 truncate text-[11px] text-muted/70'>{workspaceRelative(parentDir(entry.path))}</span>
                                 {index === active && <CornerDownLeft className='size-3.5 shrink-0 text-muted' aria-hidden='true' />}
                             </button>
                         ))

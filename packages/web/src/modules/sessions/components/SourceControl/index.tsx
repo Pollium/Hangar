@@ -6,22 +6,13 @@ import { useActiveProjectStore } from '@/modules/projects/store/activeProject';
 import { useFileExplorerStore } from '@/modules/sessions/store/fileExplorer';
 import { SidebarSection } from '@/modules/sessions/components/SidebarSection';
 import { toast } from '@/shared/store/toast';
+import { compactAge } from '@/shared/utils/time';
+import { errorMessage } from '@/shared/utils/error';
+import { basename } from '@/shared/utils/workspacePath';
 import type { GitInfo, GitChange } from '@hangar/contracts/modules/sandbox/domain';
 
 const iconBtn = 'grid size-6 place-items-center rounded text-muted transition-colors hover:text-accent disabled:opacity-50';
 type Tab = 'changes' | 'commits' | 'branches';
-
-// A short, human-friendly relative date ("3d", "2mo") from an ISO commit date.
-const relativeDate = (iso: string): string => {
-    const then = new Date(iso).getTime();
-    if(Number.isNaN(then)) return '';
-    const secs = Math.max(0, Math.round((Date.now() - then) / 1000));
-    const units: [number, string][] = [[31536000, 'y'], [2592000, 'mo'], [86400, 'd'], [3600, 'h'], [60, 'm']];
-    for(const [size, label] of units){
-        if(secs >= size) return `${Math.floor(secs / size)}${label}`;
-    }
-    return `${secs}s`;
-};
 
 // Single-letter status badge + color for a porcelain change.
 const changeBadge = (change: GitChange): { label: string; cls: string } => {
@@ -32,8 +23,6 @@ const changeBadge = (change: GitChange): { label: string; cls: string } => {
     if(c.startsWith('R')) return { label: 'R', cls: 'text-accent' };
     return { label: 'M', cls: 'text-warning' };
 };
-
-const errText = (err: unknown, fallback: string): string => err instanceof Error ? err.message : fallback;
 
 // Source Control panel, mirroring the file Explorer: lists the workspace's git repos and, for the
 // selected one, its working-tree changes, branches and recent commits, plus pull/push/fetch and
@@ -98,7 +87,7 @@ export const SourceControl = () => {
             requestFilesRefresh();
             toast.success(`${verb} succeeded`);
         }catch(err){
-            toast.error(errText(err, `${verb} failed`));
+            toast.error(errorMessage(err, `${verb} failed`));
         }finally{
             setAction(null);
         }
@@ -226,7 +215,7 @@ export const SourceControl = () => {
                                         </p>
                                     ) : changes.map((change) => {
                                         const badge = changeBadge(change);
-                                        const name = change.path.slice(change.path.lastIndexOf('/') + 1);
+                                        const name = basename(change.path);
                                         return (
                                             <div key={change.path} className='flex min-w-0 items-center gap-1.5 rounded px-2 py-1 text-[13px] hover:bg-foreground/[0.04]' title={change.path}>
                                                 <span className={`w-3 shrink-0 text-center text-[11px] font-semibold ${badge.cls}`}>{badge.label}</span>
@@ -246,7 +235,7 @@ export const SourceControl = () => {
                                                 <span className='flex items-center gap-1.5 text-[11px] text-muted/70'>
                                                     <code className='text-muted'>{commit.hash}</code>
                                                     <span className='truncate'>{commit.author}</span>
-                                                    <span className='shrink-0'>· {relativeDate(commit.date)}</span>
+                                                    <span className='shrink-0'>· {compactAge(commit.date)}</span>
                                                 </span>
                                             </span>
                                         </div>

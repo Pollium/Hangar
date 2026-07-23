@@ -171,8 +171,16 @@ export default class SessionRuntimeService{
             if(!existed){
                 // Inject every variable the owner has so custom endpoint/config entries reach
                 // the CLI together with provider keys. COLORTERM enables the CLIs' truecolor
-                // output (TERM inside tmux is set by tmux's default-terminal).
-                const env = [...await this.#credentials.resolveEnvFor(current.ownerId), 'COLORTERM=truecolor'];
+                // output (TERM inside tmux is set by tmux's default-terminal). LANG/LC_ALL give the
+                // process a UTF-8 locale — without it the container defaults to POSIX/C and the
+                // Ink-based CLIs degrade box-drawing/braille art to ASCII. C.UTF-8 is the locale
+                // present in the base image (no `locales` package needed).
+                const env = [
+                    ...await this.#credentials.resolveEnvFor(current.ownerId),
+                    'COLORTERM=truecolor',
+                    'LANG=C.UTF-8',
+                    'LC_ALL=C.UTF-8'
+                ];
                 await this.#install(handle, adapter.installCommand());
                 await this.#tmux.ensureSession(
                     handle,

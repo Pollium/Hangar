@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight, LoaderCircle, Trash2 } from 'lucide-react';
 import { sessionApi } from '@/modules/sessions/api/api';
 import { SESSION_STATUS_LABEL, SESSION_STATUS_TEXT } from '@/shared/utils/sessionStatus';
+import { relativeTime } from '@/shared/utils/time';
 import type { Session, SessionStatus } from '@hangar/contracts/modules/session/domain';
 
 const CLI_LABEL: Record<string, string> = {
@@ -23,18 +24,6 @@ const STATUS_DOT: Record<SessionStatus, string> = {
 };
 const PULSE: Record<SessionStatus, boolean> = {
     starting: true, running: true, waiting_input: true, idle: false, stopped: false, error: false
-};
-
-const timeAgo = (value: string | null, now: number): string => {
-    if(!value) return 'No activity yet';
-    const elapsed = Math.max(0, now - Date.parse(value));
-    const minutes = Math.floor(elapsed / 60_000);
-    if(minutes < 1) return 'just now';
-    if(minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if(hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
 };
 
 interface Props{
@@ -89,7 +78,7 @@ export const SessionCard = ({ session, now }: Props) => {
                 <span className={`text-[11px] font-medium ${SESSION_STATUS_TEXT[session.status]}`}>
                     {SESSION_STATUS_LABEL[session.status]}
                 </span>
-                <span className='text-[11px] text-muted/80'>{timeAgo(session.lastActiveAt, now)}</span>
+                <span className='text-[11px] text-muted/80'>{relativeTime(session.lastActiveAt, 'No activity yet', now)}</span>
             </div>
 
             <button

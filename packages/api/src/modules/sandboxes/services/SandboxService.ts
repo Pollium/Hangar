@@ -18,6 +18,10 @@ const WORKSPACE = '/workspace';
 // All service instances in this API process share the same project provisioning flight.
 const provisionFlights = new Map<string, Promise<Sandbox>>();
 
+/** Last non-empty line of command output (the actionable stderr message), or a fallback. */
+const lastLine = (output: string, fallback: string): string =>
+    output.split('\n').filter(Boolean).pop() || fallback;
+
 /**
  * Manages a project's sandbox — but never on the control-plane host. Every Docker operation runs
  * on the project owner's connected agent (their VPS); with no agent online the owner's sandboxes
@@ -167,7 +171,7 @@ export default class SandboxService{
         const { handle } = await this.ensureRunning(userId, projectId);
         const result = await handle.exec(['mv', '-n', '--', src, dest]);
         if(result.exitCode !== 0){
-            throw SandboxError.FileOperationFailed(result.output.split('\n').filter(Boolean).pop() || 'rename failed');
+            throw SandboxError.FileOperationFailed(lastLine(result.output, 'rename failed'));
         }
     }
 
@@ -182,7 +186,7 @@ export default class SandboxService{
         const { handle } = await this.ensureRunning(userId, projectId);
         const result = await handle.exec(['rm', '-rf', '--', target]);
         if(result.exitCode !== 0){
-            throw SandboxError.FileOperationFailed(result.output.split('\n').filter(Boolean).pop() || 'delete failed');
+            throw SandboxError.FileOperationFailed(lastLine(result.output, 'delete failed'));
         }
     }
 
@@ -200,14 +204,14 @@ export default class SandboxService{
 
         if(type === 'dir'){
             const made = await handle.exec(['mkdir', '-p', '--', target]);
-            if(made.exitCode !== 0) throw SandboxError.FileOperationFailed(made.output.split('\n').filter(Boolean).pop() || 'create failed');
+            if(made.exitCode !== 0) throw SandboxError.FileOperationFailed(lastLine(made.output, 'create failed'));
             return;
         }
         // Ensure the parent dir exists, then touch the file — as two argv steps, no shell.
         const parent = pathPosix.dirname(target);
         await handle.exec(['mkdir', '-p', '--', parent]);
         const made = await handle.exec(['touch', '--', target]);
-        if(made.exitCode !== 0) throw SandboxError.FileOperationFailed(made.output.split('\n').filter(Boolean).pop() || 'create failed');
+        if(made.exitCode !== 0) throw SandboxError.FileOperationFailed(lastLine(made.output, 'create failed'));
     }
 
     /**
@@ -400,7 +404,7 @@ export default class SandboxService{
 
         const result = await action(handle, repoPath, env);
         if(result.exitCode !== 0){
-            throw SandboxError.FileOperationFailed(result.output.split('\n').filter(Boolean).pop() || 'git action failed');
+            throw SandboxError.FileOperationFailed(lastLine(result.output, 'git action failed'));
         }
 
         const repos = await this.#discoverRepos(handle);
@@ -425,7 +429,7 @@ export default class SandboxService{
             // (never written to the volume), so a private repo authenticates like a session push.
             const env = await this.#credentials.resolveEnvFor(userId, ['GITHUB_TOKEN']);
             const clone = await handle.exec(['git', 'clone', trimmed, dest], { cwd: WORKSPACE, env });
-            if(clone.exitCode !== 0) throw SandboxError.CloneFailed(clone.output.split('\n').filter(Boolean).pop());
+            if(clone.exitCode !== 0) throw SandboxError.CloneFailed(lastLine(clone.output, 'clone failed'));
         }
 
         const repos = await this.#projects.listRepositories(userId, projectId);

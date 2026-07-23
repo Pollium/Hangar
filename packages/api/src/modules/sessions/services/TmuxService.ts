@@ -89,8 +89,9 @@ export default class TmuxService{
         // Advertise a modern terminal to the tmux client so it (and the agent CLI it hosts)
         // negotiate 256-color + truecolor with xterm.js. Without TERM the exec PTY defaults to a
         // dumb terminal and the Ink-based CLIs drop to a degraded palette / no cursor addressing.
+        // LANG/LC_ALL give the attach a UTF-8 locale so redrawn wide glyphs stay UTF-8 end to end.
         return handle.openPty(['tmux', 'attach-session', '-t', name], {
-            env: ['TERM=xterm-256color', 'COLORTERM=truecolor']
+            env: ['TERM=xterm-256color', 'COLORTERM=truecolor', 'LANG=C.UTF-8', 'LC_ALL=C.UTF-8']
         });
     }
 
