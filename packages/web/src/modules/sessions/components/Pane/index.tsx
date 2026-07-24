@@ -79,7 +79,7 @@ export const Pane = ({ leaf }: { leaf: LeafNode }) => {
                     {content?.kind === 'codespace'
                         ? <Code2 className='size-3.5 shrink-0 text-muted' aria-hidden='true' />
                         : <SquareTerminal className='size-3.5 shrink-0 text-muted' aria-hidden='true' />}
-                    <span className='truncate text-[12px] text-foreground'>{title}</span>
+                    {content?.kind !== 'codespace' && <span className='truncate text-[12px] text-foreground'>{title}</span>}
                 </span>
                 <span className='min-w-0 flex-1' />
                 <button type='button' className={iconBtn} aria-label='Split right' title='Split right' onClick={() => split('row')}>

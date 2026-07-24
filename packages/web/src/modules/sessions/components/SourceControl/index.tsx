@@ -5,6 +5,7 @@ import { sandboxApi } from '@/modules/projects/api/api';
 import { useActiveProjectStore } from '@/modules/projects/store/activeProject';
 import { useFileExplorerStore } from '@/modules/sessions/store/fileExplorer';
 import { SidebarSection, sectionActionButton as iconBtn } from '@/modules/sessions/components/SidebarSection';
+import { Combobox } from '@/shared/components/ui/Combobox';
 import { toast } from '@/shared/store/toast';
 import { compactAge } from '@/shared/utils/time';
 import { errorMessage } from '@/shared/utils/error';
@@ -161,17 +162,18 @@ export const SourceControl = () => {
                         <p className='px-4 pb-3 text-xs text-muted'>No git repositories in the workspace.</p>
                     ) : (
                         <>
-                            {/* Repo selector — only when the workspace holds more than one repo. */}
+                            {/* Repo picker — an autocomplete over every .git dir in the workspace.
+                                Shown only when there's more than one repo to choose between. */}
                             {info && info.repos.length > 1 && (
                                 <div className='px-3 pb-2'>
-                                    <select
-                                        value={selectedRepo}
-                                        onChange={(event) => selectRepo(event.target.value)}
-                                        className='w-full rounded-md border border-hairline bg-surface px-2 py-1 text-xs text-foreground outline-none focus:border-accent'
-                                        aria-label='Repository'
-                                    >
-                                        {info.repos.map((repo) => <option key={repo} value={repo}>{repo}</option>)}
-                                    </select>
+                                    <Combobox
+                                        items={info.repos.map((repo) => ({ id: repo, label: repo }))}
+                                        value={selectedRepo ?? null}
+                                        onChange={selectRepo}
+                                        placeholder='Search repositories…'
+                                        ariaLabel='Repository'
+                                        groupClassName='flex h-8 items-center gap-2 rounded-md border border-hairline bg-surface px-2.5 text-xs text-foreground transition-colors focus-within:border-accent'
+                                    />
                                 </div>
                             )}
 
