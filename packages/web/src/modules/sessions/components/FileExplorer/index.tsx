@@ -8,15 +8,13 @@ import { useCloneRepoModalStore } from '@/modules/projects/store/cloneRepoModal'
 import { useFileExplorerStore } from '@/modules/sessions/store/fileExplorer';
 import { useFileSearchStore } from '@/modules/sessions/store/fileSearch';
 import { useWorkspaceStore } from '@/modules/sessions/store/workspace';
-import { SidebarSection } from '@/modules/sessions/components/SidebarSection';
+import { SidebarSection, sectionActionButton as iconBtn } from '@/modules/sessions/components/SidebarSection';
 import { PromptModal } from '@/shared/components/PromptModal';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { toast } from '@/shared/store/toast';
 import { errorMessage } from '@/shared/utils/error';
 import { WORKSPACE, parentDir } from '@/shared/utils/workspacePath';
 import type { FileEntry } from '@hangar/contracts/modules/sandbox/domain';
-
-const iconBtn = 'grid size-6 place-items-center rounded text-muted transition-colors hover:text-accent disabled:opacity-50';
 
 interface Menu{ entry: FileEntry; x: number; y: number; }
 // A pending create: which directory to create in, and whether a file or folder.

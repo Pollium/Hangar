@@ -4,14 +4,13 @@ import { GitBranch as GitBranchIcon, GitCommit as GitCommitIcon, Check, RefreshC
 import { sandboxApi } from '@/modules/projects/api/api';
 import { useActiveProjectStore } from '@/modules/projects/store/activeProject';
 import { useFileExplorerStore } from '@/modules/sessions/store/fileExplorer';
-import { SidebarSection } from '@/modules/sessions/components/SidebarSection';
+import { SidebarSection, sectionActionButton as iconBtn } from '@/modules/sessions/components/SidebarSection';
 import { toast } from '@/shared/store/toast';
 import { compactAge } from '@/shared/utils/time';
 import { errorMessage } from '@/shared/utils/error';
 import { basename } from '@/shared/utils/workspacePath';
 import type { GitInfo, GitChange } from '@hangar/contracts/modules/sandbox/domain';
 
-const iconBtn = 'grid size-6 place-items-center rounded text-muted transition-colors hover:text-accent disabled:opacity-50';
 type Tab = 'changes' | 'commits' | 'branches';
 
 // Single-letter status badge + color for a porcelain change.

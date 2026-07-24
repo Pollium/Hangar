@@ -67,18 +67,21 @@ const persist = (state: Pick<SidebarPanelsState, SidebarPanel>): void => {
  * Persisted to localStorage so the layout survives navigation and reloads. Heights are clamped to a
  * sane range.
  */
-export const useSidebarPanelsStore = create<SidebarPanelsState>((set) => ({
-    ...readStored(),
-    toggle: (panel) => set((state) => {
-        const next = { ...state[panel], collapsed: !state[panel].collapsed };
-        const merged = { sessions: state.sessions, explorer: state.explorer, sourceControl: state.sourceControl, [panel]: next };
-        persist(merged);
-        return { [panel]: next };
-    }),
-    setHeight: (panel, height) => set((state) => {
-        const next = { ...state[panel], height: clampHeight(height) };
-        const merged = { sessions: state.sessions, explorer: state.explorer, sourceControl: state.sourceControl, [panel]: next };
-        persist(merged);
-        return { [panel]: next };
-    })
-}));
+export const useSidebarPanelsStore = create<SidebarPanelsState>((set) => {
+    // Apply a partial change to one panel, persist the whole layout, and return the store patch.
+    const patch = (
+        state: SidebarPanelsState,
+        panel: SidebarPanel,
+        change: Partial<PanelState>
+    ): Pick<SidebarPanelsState, SidebarPanel> => {
+        const next = { ...state[panel], ...change };
+        persist({ sessions: state.sessions, explorer: state.explorer, sourceControl: state.sourceControl, [panel]: next });
+        return { [panel]: next } as Pick<SidebarPanelsState, SidebarPanel>;
+    };
+
+    return {
+        ...readStored(),
+        toggle: (panel) => set((state) => patch(state, panel, { collapsed: !state[panel].collapsed })),
+        setHeight: (panel, height) => set((state) => patch(state, panel, { height: clampHeight(height) }))
+    };
+});

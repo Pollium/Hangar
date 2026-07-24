@@ -4,6 +4,9 @@ import { ChevronRight, ChevronDown } from 'lucide-react';
 import { useSidebarPanelsStore } from '@/modules/sessions/store/sidebarPanels';
 import type { SidebarPanel } from '@/modules/sessions/store/sidebarPanels';
 
+/** Shared class for the icon buttons rendered in a section's `actions` slot (refresh, clone, +…). */
+export const sectionActionButton = 'grid size-6 place-items-center rounded text-muted transition-colors hover:text-accent disabled:opacity-50';
+
 interface Props{
     panel: SidebarPanel;
     title: string;
