@@ -10,6 +10,12 @@ export const sectionActionButton = 'grid size-6 place-items-center rounded text-
 interface Props{
     panel: SidebarPanel;
     title: string;
+    /**
+     * Replaces the header's title text when provided (the collapse chevron stays). Used by Source
+     * Control to surface its repo picker where the title would be. Falls back to `title` when the
+     * section is collapsed or no slot is given.
+     */
+    titleSlot?: ReactNode;
     /** Header-right controls (refresh, clone, …). Clicks here don't toggle the section. */
     actions?: ReactNode;
     children: ReactNode;
@@ -20,7 +26,7 @@ interface Props{
  * toggles collapse; a drag handle along the top edge resizes the body, persisting the height to
  * the shared store. When collapsed only the header shows and the resize handle is hidden.
  */
-export const SidebarSection = ({ panel, title, actions, children }: Props) => {
+export const SidebarSection = ({ panel, title, titleSlot, actions, children }: Props) => {
     const { collapsed, height } = useSidebarPanelsStore((state) => state[panel]);
     const toggle = useSidebarPanelsStore((state) => state.toggle);
     const setHeight = useSidebarPanelsStore((state) => state.setHeight);
@@ -62,17 +68,32 @@ export const SidebarSection = ({ panel, title, actions, children }: Props) => {
                     title='Drag to resize'
                 />
             )}
-            <div className='flex items-center justify-between px-4 pt-3 pb-1.5'>
-                <button
-                    type='button'
-                    onClick={() => toggle(panel)}
-                    className='flex min-w-0 items-center gap-1 text-muted transition-colors hover:text-foreground'
-                    aria-expanded={!collapsed}
-                >
-                    {collapsed ? <ChevronRight className='size-3.5' aria-hidden='true' /> : <ChevronDown className='size-3.5' aria-hidden='true' />}
-                    <span className='mono-label'>{title}</span>
-                </button>
-                {actions && <span className='flex items-center gap-0.5'>{actions}</span>}
+            <div className='flex items-center justify-between gap-2 px-4 pt-3 pb-1.5'>
+                {titleSlot && !collapsed ? (
+                    <>
+                        <button
+                            type='button'
+                            onClick={() => toggle(panel)}
+                            className='shrink-0 text-muted transition-colors hover:text-foreground'
+                            aria-expanded={!collapsed}
+                            aria-label={`Collapse ${title}`}
+                        >
+                            <ChevronDown className='size-3.5' aria-hidden='true' />
+                        </button>
+                        <span className='min-w-0 flex-1'>{titleSlot}</span>
+                    </>
+                ) : (
+                    <button
+                        type='button'
+                        onClick={() => toggle(panel)}
+                        className='flex min-w-0 items-center gap-1 text-muted transition-colors hover:text-foreground'
+                        aria-expanded={!collapsed}
+                    >
+                        {collapsed ? <ChevronRight className='size-3.5' aria-hidden='true' /> : <ChevronDown className='size-3.5' aria-hidden='true' />}
+                        <span className='mono-label'>{title}</span>
+                    </button>
+                )}
+                {actions && <span className='flex shrink-0 items-center gap-0.5'>{actions}</span>}
             </div>
 
             {!collapsed && (

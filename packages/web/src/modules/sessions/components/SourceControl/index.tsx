@@ -104,6 +104,18 @@ export const SourceControl = () => {
         <SidebarSection
             panel='sourceControl'
             title='Source'
+            titleSlot={
+                info && info.repos.length > 0 ? (
+                    <Combobox
+                        items={info.repos.map((repo) => ({ id: repo, label: repo }))}
+                        value={selectedRepo ?? null}
+                        onChange={selectRepo}
+                        placeholder='Search repositories…'
+                        ariaLabel='Repository'
+                        groupClassName='flex h-7 items-center gap-2 rounded-md border border-hairline bg-surface px-2.5 text-xs text-foreground transition-colors focus-within:border-accent'
+                    />
+                ) : undefined
+            }
             actions={
                 <>
                     <button
@@ -162,21 +174,6 @@ export const SourceControl = () => {
                         <p className='px-4 pb-3 text-xs text-muted'>No git repositories in the workspace.</p>
                     ) : (
                         <>
-                            {/* Repo picker — an autocomplete over every .git dir in the workspace.
-                                Shown only when there's more than one repo to choose between. */}
-                            {info && info.repos.length > 1 && (
-                                <div className='px-3 pb-2'>
-                                    <Combobox
-                                        items={info.repos.map((repo) => ({ id: repo, label: repo }))}
-                                        value={selectedRepo ?? null}
-                                        onChange={selectRepo}
-                                        placeholder='Search repositories…'
-                                        ariaLabel='Repository'
-                                        groupClassName='flex h-8 items-center gap-2 rounded-md border border-hairline bg-surface px-2.5 text-xs text-foreground transition-colors focus-within:border-accent'
-                                    />
-                                </div>
-                            )}
-
                             {/* Current branch + ahead/behind. */}
                             <div className='flex items-center gap-1.5 px-4 pb-2 text-[13px] text-foreground'>
                                 <GitBranchIcon className='size-3.5 shrink-0 text-accent' aria-hidden='true' />

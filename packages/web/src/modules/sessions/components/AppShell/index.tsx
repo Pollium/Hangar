@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Dropdown, ScrollShadow } from '@heroui/react';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -62,9 +62,37 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
     const openCloneRepo = useCloneRepoModalStore((state) => state.open);
     const sidebarCollapsed = useSidebarStore((state) => state.collapsed);
     const toggleSidebar = useSidebarStore((state) => state.toggle);
+    const sidebarWidth = useSidebarStore((state) => state.width);
+    const setSidebarWidth = useSidebarStore((state) => state.setWidth);
+    const draggingSidebar = useRef(false);
+    const [resizing, setResizing] = useState(false);
     const [theme, setTheme] = useState<Theme>(() =>
         document.documentElement.classList.contains('dark') ? 'dark' : 'light'
     );
+
+    // Drag the sidebar's right edge to resize. The width is measured from the viewport's left edge
+    // (the sidebar starts at x=0), clamped+persisted by the store. Listeners live for the drag only.
+    useEffect(() => {
+        const onMove = (event: MouseEvent) => { if(draggingSidebar.current) setSidebarWidth(event.clientX); };
+        const onUp = () => {
+            if(!draggingSidebar.current) return;
+            draggingSidebar.current = false;
+            setResizing(false);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    }, [setSidebarWidth]);
+
+    const startSidebarResize = (event: React.MouseEvent) => {
+        event.preventDefault();
+        draggingSidebar.current = true;
+        setResizing(true);
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    };
 
     const toggleTheme = () => {
         const next: Theme = theme === 'dark' ? 'light' : 'dark';
@@ -79,7 +107,10 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
 
     return (
         <div className='flex h-dvh bg-background text-foreground'>
-            <aside className={`hidden shrink-0 flex-col overflow-hidden transition-[width] duration-200 md:flex ${sidebarCollapsed ? 'md:w-0' : 'md:w-60'}`}>
+            <aside
+                className={`relative hidden shrink-0 flex-col overflow-hidden md:flex ${resizing ? '' : 'transition-[width] duration-200'}`}
+                style={{ width: sidebarCollapsed ? 0 : sidebarWidth }}
+            >
                 <div className='flex h-14 shrink-0 items-center justify-between px-2'>
                     <span className='px-1.5 text-sm font-semibold tracking-tight text-foreground'>HANGAR</span>
                     <button
@@ -114,6 +145,21 @@ export const AppShell = ({ headerActions, children, bleed = false }: Props) => {
                     <SourceControl />
                 </div>
             </aside>
+
+            {/* Resize handle: a thin draggable strip on the sidebar's right edge (desktop, expanded
+                only). A wider transparent hit-area sits over the visible hairline for easy grabbing. */}
+            {!sidebarCollapsed && (
+                <div
+                    role='separator'
+                    aria-orientation='vertical'
+                    aria-label='Resize sidebar'
+                    onMouseDown={startSidebarResize}
+                    className='group relative z-20 hidden w-px shrink-0 cursor-col-resize bg-hairline md:block'
+                    title='Drag to resize'
+                >
+                    <span className='absolute inset-y-0 -left-1 -right-1 transition-colors group-hover:bg-accent/40' />
+                </div>
+            )}
 
             <div className='flex min-h-0 min-w-0 flex-1 flex-col'>
                 <header className='relative flex h-14 shrink-0 items-center gap-2 px-4 sm:gap-3 sm:px-6'>
